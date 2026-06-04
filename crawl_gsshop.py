@@ -387,6 +387,12 @@ def collect_products_from_program(driver, pgm_item):
 
 def save_to_google_sheet(service_key_json, sheet_id, data_list):
     """구글 스프레드시트에 수집된 데이터를 누적 저장 (시간 정보 포함)"""
+    # 만약 sheet_id에 스프레드시트 URL 전체를 넣었을 경우, ID 부분만 정규식으로 자동 추출
+    if "docs.google.com/spreadsheets" in str(sheet_id):
+        match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_id)
+        if match:
+            sheet_id = match.group(1)
+
     try:
         import gspread
         from google.oauth2.service_account import Credentials
