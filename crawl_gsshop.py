@@ -412,7 +412,14 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
         
         # 시트 열기
         spreadsheet = client.open_by_key(sheet_id)
-        sheet = spreadsheet.sheet1
+        
+        # 'MLIVE' 워크시트 열기 (없으면 새로 자동 생성)
+        try:
+            sheet = spreadsheet.worksheet("MLIVE")
+        except gspread.exceptions.WorksheetNotFound:
+            sheet = spreadsheet.add_worksheet(title="MLIVE", rows="1000", cols="20")
+            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"])
+            print("  [구글 시트] 신규 'MLIVE' 워크시트 탭 생성 및 헤더 추가 완료")
         
         # 헤더가 비어있을 경우 생성
         existing_records = sheet.get_all_values()
