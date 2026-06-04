@@ -1,0 +1,41 @@
+name: GS SHOP Mobile Live Crawler
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 8:00 (UTC 23:00)에 자동 구동
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    # 깃허브 웹에서 수동으로 즉시 구동할 수 있도록 지원
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium gspread google-auth
+
+    - name: Install Chrome and Driver
+      # ubuntu-latest에는 Chrome 브라우저가 기본 설치되어 있으므로, 
+      # 별도 설치 없이 headless 모드로 바로 사용 가능합니다.
+      run: |
+        google-chrome --version
+        chromedriver --version
+
+    - name: Run Crawler
+      env:
+        GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+      run: |
+        python -X utf8 crawl_gsshop.py
