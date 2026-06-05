@@ -385,8 +385,66 @@ def collect_products_from_program(driver, pgm_item):
     return products
 
 
+def process_status_mapping(existing_rows, new_crawl_data):
+    """
+    기존 구글 시트/CSV 데이터와 신규 수집된 데이터를 비교하여
+    [신규등록], [편성제외] 상태를 맵핑하고 정렬된 리스트를 반환합니다.
+    """
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    
+    # 1. 기존 데이터에서 오늘 및 미래 날짜만 필터링하여 딕셔너리화 (과거 데이터 자동 정리)
+    existing_dict = {}
+    for r in existing_rows:
+        date_val = r.get("date", "")
+        if date_val and date_val >= today_str:
+            key = (str(r.get("pgmId", "")), str(r.get("prdid", "")))
+            existing_dict[key] = r
+
+    crawled_keys = set()
+    final_dict = {}
+    
+    # 2. 신규 크롤링 데이터 매핑
+    for item in new_crawl_data:
+        key = (str(item["pgmId"]), str(item["prdid"]))
+        crawled_keys.add(key)
+        
+        # 기존에 있던 상품인지 판별
+        if key in existing_dict:
+            prev_status = existing_dict[key].get("status", "")
+            # 이전 상태가 '편성제외'였는데 다시 크롤링되었다면 일반 상태로 리셋
+            status = "" if prev_status == "편성제외" else prev_status
+        else:
+            # 새로 발견된 상품인 경우
+            status = "신규등록"
+            
+        final_dict[key] = {
+            "date": item["date"],
+            "date_str": item["date_str"],
+            "broadcast_time": item["broadcast_time"],
+            "pgmId": str(item["pgmId"]),
+            "pgmTitle": item["pgmTitle"],
+            "prdid": str(item["prdid"]),
+            "title": item["title"],
+            "url": item["url"],
+            "status": status
+        }
+        
+    # 3. 기존에 있었으나 이번 크롤링에서 누락된 상품 매핑 (편성제외 처리)
+    for key, existing_item in existing_dict.items():
+        if key not in crawled_keys:
+            existing_item["status"] = "편성제외"
+            final_dict[key] = existing_item
+            
+    # 4. 날짜 및 시간순으로 정렬
+    sorted_records = sorted(
+        final_dict.values(),
+        key=lambda x: (x.get("date_str", ""), x.get("broadcast_time", ""), x.get("pgmId", ""), x.get("prdid", ""))
+    )
+    return sorted_records
+
+
 def save_to_google_sheet(service_key_json, sheet_id, data_list):
-    """구글 스프레드시트에 수집된 데이터를 누적 저장 (시간 정보 포함)"""
+    """구글 스프레드시트에 수집된 데이터를 상태 매핑하여 덮어쓰기 저장"""
     # 만약 sheet_id에 스프레드시트 URL 전체를 넣었을 경우, ID 부분만 정규식으로 자동 추출
     if "docs.google.com/spreadsheets" in str(sheet_id):
         match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_id)
@@ -402,7 +460,7 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
 
     try:
         scopes = [
-            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/sheets",
             "https://www.googleapis.com/auth/drive"
         ]
         # JSON 키 파싱 및 크레덴셜 생성
@@ -418,48 +476,46 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
             sheet = spreadsheet.worksheet("MLIVE")
         except gspread.exceptions.WorksheetNotFound:
             sheet = spreadsheet.add_worksheet(title="MLIVE", rows="1000", cols="20")
-            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"], value_input_option="USER_ENTERED")
+            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url", "status"], value_input_option="USER_ENTERED")
             print("  [구글 시트] 신규 'MLIVE' 워크시트 탭 생성 및 헤더 추가 완료")
         
-        # 헤더가 비어있을 경우 생성
+        # 기존 데이터 읽기
         existing_records = sheet.get_all_values()
-        if not existing_records:
-            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"], value_input_option="USER_ENTERED")
-            print("  [구글 시트] 신규 시트에 헤더 생성 완료")
-            existing_records = [[]]
-
-        # 중복 방지를 위해 이미 기록된 (pgmId, prdid) 매핑 쌍 확보
-        logged_keys = set()
-        for idx, row in enumerate(existing_records):
-            if idx == 0:  # 헤더 스킵
-                continue
-            if len(row) >= 6:
-                logged_keys.add((row[3], row[5]))  # pgmId(인덱스 3), prdid(인덱스 5)
-
-        # 신규 추가할 행 필터링 및 리스트 생성
-        rows_to_append = []
-        new_count = 0
-        for item in data_list:
-            key = (item["pgmId"], item["prdid"])
-            if key not in logged_keys:
-                rows_to_append.append([
-                    item["date"],
-                    item["date_str"],
-                    item["broadcast_time"],
-                    item["pgmId"],
-                    item["pgmTitle"],
-                    item["prdid"],
-                    item["title"],
-                    item["url"]
-                ])
-                new_count += 1
-
-        if rows_to_append:
-            sheet.append_rows(rows_to_append, value_input_option="USER_ENTERED")
-            print(f"  [구글 시트] 신규 상품 {new_count}건 누적 저장 완료! (중복 제거 적용)")
-        else:
-            print("  [구글 시트] 추가할 새로운 신규 상품이 없습니다. (모든 데이터 중복)")
+        existing_rows = []
+        if existing_records and len(existing_records) > 1:
+            headers = [h.strip() for h in existing_records[0]]
+            for r in existing_records[1:]:
+                row_dict = {}
+                for idx, h in enumerate(headers):
+                    if idx < len(r):
+                        row_dict[h] = r[idx]
+                existing_rows.append(row_dict)
         
+        # 상태 매핑 적용 및 정렬
+        processed_data = process_status_mapping(existing_rows, data_list)
+        
+        # 시트 비우기
+        sheet.clear()
+        
+        # 데이터 업데이트 준비
+        headers = ["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url", "status"]
+        rows_to_write = [headers]
+        for item in processed_data:
+            rows_to_write.append([
+                item.get("date", ""),
+                item.get("date_str", ""),
+                item.get("broadcast_time", ""),
+                item.get("pgmId", ""),
+                item.get("pgmTitle", ""),
+                item.get("prdid", ""),
+                item.get("title", ""),
+                item.get("url", ""),
+                item.get("status", "")
+            ])
+            
+        # 한번에 업로드
+        sheet.append_rows(rows_to_write, value_input_option="USER_ENTERED")
+        print(f"  [구글 시트] 기존 데이터 비교 완료. 총 {len(processed_data)}건 상태 매핑 및 덮어쓰기 완료!")
         return True
     except Exception as e:
         print(f"[구글 시트 저장 실패] 에러 사유: {e}")
@@ -563,16 +619,30 @@ def main():
         print(f"\n[데이터 저장] 구글 스프레드시트({spreadsheet_id}) 누적 업로드 진행 중...")
         sheet_saved = save_to_google_sheet(service_key, spreadsheet_id, unique_products)
 
-    # 로컬 백업 CSV 저장
+    # 로컬 백업 CSV 저장 (기존 데이터 비교 후 상태 매핑 및 덮어쓰기)
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), OUTPUT_FILE)
     if unique_products:
+        # 기존 로컬 데이터 읽기
+        existing_rows_local = []
+        if os.path.exists(output_path):
+            try:
+                with open(output_path, "r", encoding="utf-8-sig") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        existing_rows_local.append(dict(row))
+            except Exception as e:
+                print(f"  [로컬 경고] 기존 로컬 CSV 데이터 읽기 실패: {e}")
+
+        # 상태 매핑 적용
+        processed_local_data = process_status_mapping(existing_rows_local, unique_products)
+
         with open(output_path, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(
-                f, fieldnames=["date","date_str","broadcast_time","pgmId","pgmTitle","prdid","title","url"])
+                f, fieldnames=["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url", "status"])
             writer.writeheader()
-            writer.writerows(unique_products)
+            writer.writerows(processed_local_data)
         print(f"\n[로컬 백업 완료] 저장 완료: {output_path}")
-        print(f"총 {len(unique_products)}개 상품 매핑 완료")
+        print(f"총 {len(processed_local_data)}개 상품 맵핑 완료 (덮어쓰기 완료)")
     else:
         print("\n수집된 데이터가 없습니다.")
 
