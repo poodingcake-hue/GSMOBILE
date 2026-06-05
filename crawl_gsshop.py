@@ -19,7 +19,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # ── 설정 ────────────────────────────────────────────────
-DAYS_TO_CRAWL = 1
+DAYS_TO_CRAWL = 4
 OUTPUT_FILE   = "gsshop_mobile_live_products.csv"  # 로컬 저장용 파일명
 WAIT_SEC      = 15
 SCROLL_PAUSE  = 1.0
