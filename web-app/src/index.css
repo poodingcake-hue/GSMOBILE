@@ -210,29 +210,41 @@ body {
 /* Product Grid Layout */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background-color: var(--border-color);
+}
+
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 /* Product Card */
 .product-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
+  aspect-ratio: 3 / 4;
   transition: var(--transition-smooth);
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: #cbd5e1;
+  opacity: 0.95;
 }
 
-/* Image Wrapper with absolute positioning for overlays */
+/* Image Wrapper (3:3 square) */
 .product-img-wrapper {
   position: relative;
   width: 100%;
@@ -242,126 +254,118 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.5rem;
+  border-bottom: none;
+  padding: 0;
 }
 
 .product-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: var(--transition-smooth);
 }
 
 .product-card:hover .product-img {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 /* Overlay Container (Bottom Right) */
 .overlays-container {
   position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+  bottom: 0.25rem;
+  right: 0.25rem;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.25rem;
+  gap: 0.15rem;
   pointer-events: none;
 }
 
 /* Date Overlay Labels */
 .overlay-date-badge {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(2px);
   color: #ffffff;
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.25rem;
+  font-size: 0.55rem;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.15rem;
   white-space: nowrap;
 }
 
-/* Location Overlay Label */
-.overlay-loc-badge {
-  background: var(--accent-primary);
-  color: #ffffff;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  white-space: nowrap;
-}
-
-/* Product Info Body */
+/* Product Info Body (1:4 bottom area) */
 .product-info-body {
-  padding: 1rem;
+  padding: 0.35rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-}
-
-.product-brand {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent-primary);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
+  overflow: hidden;
+  justify-content: space-between;
 }
 
 .product-title {
-  font-size: 0.925rem;
-  font-weight: 700;
+  font-size: 0.725rem;
+  font-weight: 500;
   color: var(--text-dark);
-  line-height: 1.4;
-  height: 2.6rem;
+  line-height: 1.25;
+  height: 2.5em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.15rem;
 }
 
 .product-footer-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: auto;
-  padding-top: 0.5rem;
-  border-top: 1px dashed var(--border-color);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: var(--text-gray);
+  margin-top: auto;
+  padding-top: 0.1rem;
+  border-top: none;
 }
 
 .product-code-text {
   font-family: monospace;
 }
 
-.status-badge {
-  font-size: 0.7rem;
+.product-loc-text {
   font-weight: 700;
-  padding: 0.15rem 0.4rem;
-  border-radius: 0.25rem;
+  color: var(--accent-primary);
+}
+
+.product-status-row {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.status-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.15rem;
 }
 
 .status-badge.new {
   background: var(--accent-blue-bg);
   color: var(--accent-primary);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .status-badge.excluded {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.06);
   color: var(--accent-red);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
 /* Canceled/Excluded card state */
 .product-card.excluded-state {
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 .product-card.excluded-state .product-img-wrapper {
@@ -585,58 +589,41 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Responsive Grid for Mobile (3 columns) */
+/* Responsive adjustments for mobile screens */
 @media (max-width: 640px) {
+  .container {
+    padding: 0.5rem 0 0 0;
+    gap: 0.75rem;
+  }
+  
+  .date-scroll-wrapper,
+  .time-filter-section,
+  .broadcast-header,
+  .empty-state {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
   .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    gap: 1px;
   }
-  
-  .product-card {
-    border-radius: 0.5rem;
-  }
-  
-  .product-img-wrapper {
-    padding: 0.25rem;
-  }
-  
-  .overlay-date-badge {
-    font-size: 0.55rem;
-    padding: 0.05rem 0.2rem;
-  }
-  
-  .overlay-loc-badge {
-    font-size: 0.6rem;
-    padding: 0.05rem 0.25rem;
-  }
-  
+
   .product-info-body {
-    padding: 0.4rem;
+    padding: 0.3rem;
   }
-  
-  .product-brand {
-    font-size: 0.6rem;
-    margin-bottom: 0.1rem;
-  }
-  
+
   .product-title {
-    font-size: 0.75rem;
+    font-size: 0.675rem;
     line-height: 1.2;
-    height: 1.8rem;
-    -webkit-line-clamp: 2;
-    margin-bottom: 0.25rem;
+    height: 2.4em;
   }
-  
+
   .product-footer-row {
-    font-size: 0.6rem;
-    padding-top: 0.25rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
+    font-size: 0.55rem;
   }
   
   .status-badge {
-    font-size: 0.55rem;
-    padding: 0.05rem 0.2rem;
+    font-size: 0.5rem;
+    padding: 0.05rem 0.15rem;
   }
 }

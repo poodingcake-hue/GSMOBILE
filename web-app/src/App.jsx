@@ -450,48 +450,42 @@ function App() {
                       loading="lazy"
                     />
                   ) : (
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>이미지 준비중</div>
+                    <div className="no-image-placeholder">이미지 준비중</div>
                   )}
 
-                  {/* Overlays (Bottom Right) */}
+                  {/* Overlays (Bottom Right) - Live Times only */}
                   <div className="overlays-container">
-                    {/* Live Times stack */}
                     {product.liveTimes.map((lt, idx) => (
                       <span key={idx} className="overlay-date-badge">
                         {lt}
                       </span>
                     ))}
-                    
-                    {/* Location Badge */}
-                    {product.location && (
-                      <span className="overlay-loc-badge">
-                        {product.location}
-                      </span>
-                    )}
                   </div>
                 </div>
 
                 {/* Info body */}
                 <div className="product-info-body">
-                  <span className="product-brand">
-                    {product.isOurProduct ? '자사 상품' : '기타 상품'}
-                  </span>
-                  
                   <h3 className="product-title" title={product.mappedName}>
                     {product.mappedName}
                   </h3>
                   
                   <div className="product-footer-row">
-                    <span className="product-code-text">코드: {product.prdid}</span>
-                    
-                    {/* Excluded / New Badge status */}
-                    {product.status === '신규등록' && (
-                      <span className="status-badge new">신규등록</span>
-                    )}
-                    {product.status === '편성제외' && (
-                      <span className="status-badge excluded">편성제외</span>
+                    <span className="product-code-text">{product.prdid}</span>
+                    {product.location && (
+                      <span className="product-loc-text">{product.location}</span>
                     )}
                   </div>
+
+                  {product.status && product.status !== '' && product.status !== '정상' && (
+                    <div className="product-status-row">
+                      {product.status === '신규등록' && (
+                        <span className="status-badge new">신규</span>
+                      )}
+                      {product.status === '편성제외' && (
+                        <span className="status-badge excluded">제외</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
