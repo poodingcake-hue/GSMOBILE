@@ -666,6 +666,11 @@ def main():
     # ==========================================
     # Step 3: 데이터 저장 (Google Sheets / 로컬 CSV)
     # ==========================================
+    if len(unique_products) < 10:
+        print(f"\n[안전 장치 발동] 수집된 상품 개수가 비정상적으로 적습니다 ({len(unique_products)}개).")
+        print("네트워크 지연 혹은 봇 차단 오류로 간주하여, 기존 상품들이 일괄 '편성제외' 처리되는 것을 막기 위해 크롤러를 즉시 중단합니다.")
+        sys.exit(1)
+
     service_key = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
     spreadsheet_id = os.environ.get("SPREADSHEET_ID")
 
