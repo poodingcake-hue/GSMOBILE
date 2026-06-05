@@ -121,8 +121,19 @@ function App() {
   // History API for Back Button integration
   useEffect(() => {
     const handlePopState = (e) => {
+      // 1. If stock page is open, close it.
       if (selectedProduct) {
         setSelectedProduct(null);
+        return;
+      }
+      
+      // 2. If state contains time, restore time
+      if (e.state && e.state.pgmId) {
+        setSelectedPgmId(e.state.pgmId);
+      } 
+      // 3. If state contains date, restore date
+      else if (e.state && e.state.date) {
+        setSelectedDate(e.state.date);
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -132,7 +143,7 @@ function App() {
   const openStockPage = (product) => {
     if (product.isOurProduct) {
       setSelectedProduct(product);
-      window.history.pushState({ stockOpen: true }, '', '#stock');
+      window.history.pushState({ stockOpen: true, pgmId: selectedPgmId, date: selectedDate }, '', '#stock');
     }
   };
 
@@ -141,6 +152,20 @@ function App() {
       window.history.back(); // triggers popstate which sets selectedProduct to null
     } else {
       setSelectedProduct(null);
+    }
+  };
+
+  const handleDateClick = (date) => {
+    if (selectedDate !== date) {
+      setSelectedDate(date);
+      window.history.pushState({ date }, '', `#date=${date}`);
+    }
+  };
+
+  const handleTimeClick = (pgmId) => {
+    if (selectedPgmId !== pgmId) {
+      setSelectedPgmId(pgmId);
+      window.history.pushState({ pgmId }, '', `#time=${pgmId}`);
     }
   };
 
@@ -196,6 +221,7 @@ function App() {
           const uniqueDates = [...new Set(mliveList.map(item => item.date))].sort();
           if (uniqueDates.length > 0) {
             setSelectedDate(uniqueDates[0]);
+            window.history.replaceState({ date: uniqueDates[0] }, '', `#date=${uniqueDates[0]}`);
           }
         }
         setLoading(false);
@@ -320,7 +346,9 @@ function App() {
     if (availablePrograms.length > 0) {
       const hasActivePgm = availablePrograms.some(p => p.pgmId === selectedPgmId);
       if (!hasActivePgm) {
-        setSelectedPgmId(availablePrograms[0].pgmId);
+        const newPgmId = availablePrograms[0].pgmId;
+        setSelectedPgmId(newPgmId);
+        window.history.replaceState({ pgmId: newPgmId }, '', `#time=${newPgmId}`);
       }
     } else {
       setSelectedPgmId('');
@@ -445,7 +473,7 @@ function App() {
                 <button
                   key={date}
                   className={`date-card ${isActive ? 'active' : ''}`}
-                  onClick={() => setSelectedDate(date)}
+                  onClick={() => handleDateClick(date)}
                 >
                   <span className="date-card-day-name">{weekdayName}</span>
                   <span className="date-card-day-number">{dayNumber}</span>
@@ -477,7 +505,7 @@ function App() {
                 <button
                   key={p.pgmId}
                   className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
-                  onClick={() => setSelectedPgmId(p.pgmId)}
+                  onClick={() => handleTimeClick(p.pgmId)}
                 >
                   {p.broadcast_time}
                 </button>
