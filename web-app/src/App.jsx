@@ -205,6 +205,27 @@ function App() {
     }
   };
 
+  // Touch Swipe for Stock Page (Swipe to go back/close)
+  const stockTouchStartX = useRef(0);
+  const stockTouchStartY = useRef(0);
+
+  const handleStockTouchStart = (e) => {
+    stockTouchStartX.current = e.changedTouches[0].screenX;
+    stockTouchStartY.current = e.changedTouches[0].screenY;
+  };
+
+  const handleStockTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const touchEndY = e.changedTouches[0].screenY;
+    const diffX = stockTouchStartX.current - touchEndX;
+    const diffY = stockTouchStartY.current - touchEndY;
+
+    // If swiped horizontally > 50px (e.g. standard left/right swipe)
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      closeStockPage();
+    }
+  };
+
   // Load datasets on mount
   useEffect(() => {
     setLoading(true);
@@ -663,7 +684,11 @@ function App() {
 
       {/* 5. Inventory Full Page View */}
       {selectedProduct && (
-        <div className="stock-page-container">
+        <div 
+          className="stock-page-container"
+          onTouchStart={handleStockTouchStart}
+          onTouchEnd={handleStockTouchEnd}
+        >
           <div className="stock-page-header">
             <h3 className="stock-page-title">재고 수량 확인</h3>
             <button className="stock-page-close-btn" onClick={closeStockPage}>
