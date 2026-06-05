@@ -440,9 +440,9 @@ function App() {
                 onClick={() => product.isOurProduct && setSelectedProduct(product)}
                 style={{ cursor: product.isOurProduct ? 'pointer' : 'default' }}
               >
-                {/* 3:4 Image Layout */}
-                <div className="product-img-layout-3-4">
-                  {/* 3:3 Image Box (Top 75%) */}
+                {/* 3:3.4 Image Layout */}
+                <div className="product-img-layout-3-3_4">
+                  {/* 3:3 Image Box */}
                   <div className="product-img-box-3-3">
                     {product.imageUrl ? (
                       <img 
@@ -467,7 +467,7 @@ function App() {
                     )}
                   </div>
 
-                  {/* 3:1 Location Box (Bottom 25%) */}
+                  {/* Location Box */}
                   <div className="product-loc-box-3-1">
                     {product.location ? (
                       <span className="product-loc-text">{product.location}</span>
@@ -477,20 +477,15 @@ function App() {
                   </div>
                 </div>
 
-                {/* Info body (Product Name & Status below 3:4 container) */}
+                {/* Info body (Product Name & Status below 3:3.4 container) */}
                 <div className="product-info-body">
                   <h3 className="product-title" title={product.mappedName}>
                     {product.mappedName}
                   </h3>
                   
-                  {product.status && product.status !== '' && product.status !== '정상' && (
+                  {product.status === '편성제외' && (
                     <div className="product-status-row">
-                      {product.status === '신규등록' && (
-                        <span className="status-badge new">신규</span>
-                      )}
-                      {product.status === '편성제외' && (
-                        <span className="status-badge excluded">제외</span>
-                      )}
+                      <span className="status-badge excluded">제외</span>
                     </div>
                   )}
                 </div>
