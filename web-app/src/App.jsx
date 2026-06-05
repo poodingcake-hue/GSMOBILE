@@ -105,9 +105,8 @@ function App() {
       const saved = localStorage.getItem('github_config');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (!parsed.token) {
-          parsed.token = defaultToken;
-        }
+        // 로컬 스토리지에 남아있을 수 있는 오래된 토큰을 무시하고, 코드에 내장된 올바른 토큰을 강제로 사용합니다.
+        parsed.token = defaultToken;
         return parsed;
       }
       return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
