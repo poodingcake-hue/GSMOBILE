@@ -223,7 +223,7 @@ function App() {
 
   // Detect column mapping indices for image.csv
   const imageColumnIndices = useMemo(() => {
-    if (imageData.length === 0) return { prdid: 0, url: 2 };
+    if (imageData.length === 0) return { prdid: 0, url: 2, url2: 3 };
     const headers = imageData[0].map(h => h.toLowerCase());
     
     let prdIdx = headers.findIndex(h => h.includes('코드') || h.includes('prdid') || h.includes('상품코드'));
@@ -232,7 +232,7 @@ function App() {
     if (prdIdx === -1) prdIdx = 0;
     if (urlIdx === -1) urlIdx = 2;
     
-    return { prdid: prdIdx, url: urlIdx };
+    return { prdid: prdIdx, url: urlIdx, url2: urlIdx + 1 };
   }, [imageData]);
 
   // Make set of RAW inventory product IDs to identify "our products"
@@ -336,10 +336,16 @@ function App() {
       
       // 2. Mapped image URL (sheet first, fallback to GS CDN)
       let imageUrl = '';
+      let image2Url = '';
       if (imageData.length > 1) {
         const foundImg = imageData.slice(1).find(row => row[imageColumnIndices.prdid] === prdid);
-        if (foundImg && foundImg[imageColumnIndices.url]) {
-          imageUrl = getGoogleDriveDirectLink(foundImg[imageColumnIndices.url]);
+        if (foundImg) {
+          if (foundImg[imageColumnIndices.url]) {
+            imageUrl = getGoogleDriveDirectLink(foundImg[imageColumnIndices.url]);
+          }
+          if (foundImg[imageColumnIndices.url2]) {
+            image2Url = getGoogleDriveDirectLink(foundImg[imageColumnIndices.url2]);
+          }
         }
       }
       // Fallback: GS Shop CDN URL
@@ -351,7 +357,11 @@ function App() {
       const liveTimes = [];
       if (liveData.length > 1) {
         liveData.slice(1).forEach(row => {
-          if (row[liveColumnIndices.prdid] === prdid) {
+          const rawPrdId = row[liveColumnIndices.prdid];
+          if (!rawPrdId) return;
+          const cleanPrdId = rawPrdId.replace(/,/g, '').split('.')[0];
+          
+          if (cleanPrdId === prdid) {
             const rawDate = row[liveColumnIndices.date];
             if (rawDate) {
               liveTimes.push(formatLiveDate(rawDate));
@@ -365,6 +375,7 @@ function App() {
         mappedName: name,
         location,
         imageUrl,
+        image2Url,
         liveTimes,
         isOurProduct: ourProductIds.has(prdid)
       };
@@ -556,84 +567,92 @@ function App() {
         </main>
       )}
 
-      {/* 5. Inventory Modal Overlay */}
+      {/* 5. Inventory Full Page View */}
       {selectedProduct && (
-        <div className="modal-backdrop" onClick={() => setSelectedProduct(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">재고 수량 확인</h3>
-              <button className="modal-close-btn" onClick={() => setSelectedProduct(null)}>
-                <X size={20} />
-              </button>
+        <div className="stock-page-container">
+          <div className="stock-page-header">
+            <h3 className="stock-page-title">재고 수량 확인</h3>
+            <button className="stock-page-close-btn" onClick={() => setSelectedProduct(null)}>
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className="stock-page-body">
+            {/* Product Images (Continuous Scroll) */}
+            <div className="stock-page-images">
+              {selectedProduct.imageUrl ? (
+                <img 
+                  src={selectedProduct.imageUrl} 
+                  className="stock-page-img" 
+                  alt={selectedProduct.mappedName} 
+                />
+              ) : null}
+              {selectedProduct.image2Url ? (
+                <img 
+                  src={selectedProduct.image2Url} 
+                  className="stock-page-img" 
+                  alt={`${selectedProduct.mappedName} 추가사진`} 
+                />
+              ) : null}
+              {(!selectedProduct.imageUrl && !selectedProduct.image2Url) && (
+                <div className="stock-page-noimg">이미지 없음</div>
+              )}
             </div>
-            
-            <div className="modal-body">
-              {/* Product summary block */}
-              <div className="modal-product-summary">
-                <div className="modal-product-img-box">
-                  {selectedProduct.imageUrl ? (
-                    <img 
-                      src={selectedProduct.imageUrl} 
-                      className="modal-product-img" 
-                      alt={selectedProduct.mappedName} 
-                    />
-                  ) : (
-                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>이미지 없음</span>
-                  )}
-                </div>
-                <div className="modal-product-details">
-                  <h4 className="modal-product-title">{selectedProduct.mappedName}</h4>
-                  <span className="modal-product-code">상품코드: {selectedProduct.prdid}</span>
-                  {selectedProduct.location && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-teal)', fontWeight: 600 }}>
-                      보관위치: {selectedProduct.location}
-                    </span>
-                  )}
-                </div>
-              </div>
 
-              {/* 2D Stock Matrix table */}
-              {matrixData.colors.length > 0 ? (
-                <div className="matrix-table-container">
-                  <table className="matrix-table">
-                    <thead>
-                      <tr>
-                        <th>색상</th>
-                        {matrixData.sizes.map(size => (
-                          <th key={size}>{size}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {matrixData.colors.map(color => (
-                        <tr key={color}>
-                          <td className="row-header">{color}</td>
-                          {matrixData.sizes.map(size => {
-                            const key = `${color}_${size}`;
-                            const stock = matrixData.stockMap[key];
-                            const hasStock = stock !== undefined && stock > 0;
-                            return (
-                              <td 
-                                key={size} 
-                                className={`stock-cell ${hasStock ? '' : 'empty'}`}
-                              >
-                                {hasStock ? stock : '-'}
-                              </td>
-                            );
-                          })}
-                        </tr>
+            <div className="stock-page-details">
+              <h4 className="stock-page-product-title">{selectedProduct.mappedName}</h4>
+              <div className="stock-page-meta">
+                <span className="stock-page-code">{selectedProduct.prdid}</span>
+                {selectedProduct.location && (
+                  <span className="stock-page-location">
+                    <span role="img" aria-label="excel" style={{ marginRight: '4px' }}>📊</span> 
+                    {selectedProduct.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 2D Stock Matrix table */}
+            {matrixData.colors.length > 0 ? (
+              <div className={`matrix-table-container ${matrixData.sizes.length >= 8 ? 'scrollable' : 'fit-screen'}`}>
+                <table className="matrix-table">
+                  <thead>
+                    <tr>
+                      <th className="color-col-header">색상</th>
+                      {matrixData.sizes.map(size => (
+                        <th key={size}>{size}</th>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrixData.colors.map(color => (
+                      <tr key={color}>
+                        <td className="row-header">{color}</td>
+                        {matrixData.sizes.map(size => {
+                          const key = `${color}_${size}`;
+                          const stock = matrixData.stockMap[key];
+                          const hasStock = stock !== undefined && stock > 0;
+                          return (
+                            <td 
+                              key={size} 
+                              className={`stock-cell ${hasStock ? '' : 'empty'}`}
+                            >
+                              {hasStock ? stock : '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
                 <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                   등록된 재고 상세 옵션 정보가 없습니다.
                 </div>
               )}
             </div>
           </div>
-        </div>
       )}
     </div>
   );

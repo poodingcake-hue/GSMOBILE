@@ -16,7 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, UnexpectedAlertPresentException, NoAlertPresentException
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', write_through=True)
 
 # ── 설정 ────────────────────────────────────────────────
 DAYS_TO_CRAWL = 4
@@ -53,6 +53,7 @@ def build_driver(headless=False):
         "Page.addScriptToEvaluateOnNewDocument",
         {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"},
     )
+    driver.set_page_load_timeout(20)
     return driver
 
 
@@ -310,6 +311,8 @@ def collect_products_from_program(driver, pgm_item):
     try:
         driver.get(url)
         time.sleep(3.5)
+    except TimeoutException:
+        print("     [경고] 프로그램 상세 페이지 로드 타임아웃 발생, 계속 진행합니다.")
     except UnexpectedAlertPresentException:
         handle_alert(driver)
     
@@ -582,10 +585,13 @@ def main():
             target_url = f"https://m.gsshop.com/main/broadSchedule?mseq=W00323&broadType=SHOPPY&broadDate={date_str}"
             print(f"\n[편성표 조회] {date_label} ({date_str}) 이동: {target_url}")
             try:
-                driver.get(target_url)
-                time.sleep(5)
+                # driver.get(target_url) 대신 JS로 이동 (무한 로딩 방지)
+                driver.execute_script(f"window.location.href = '{target_url}';")
+                time.sleep(8)
             except UnexpectedAlertPresentException:
                 handle_alert(driver)
+            except Exception as e:
+                print(f"  [오류] 페이지 이동 실패: {e}")
                 
             handle_alert(driver)
             click_mobile_live_tab(driver)
