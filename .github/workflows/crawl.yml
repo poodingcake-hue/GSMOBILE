@@ -2,9 +2,9 @@ name: GS SHOP Mobile Live Crawler
 
 on:
   schedule:
-    # 매일 한국 시간 오전 9:00 ~ 오후 8:00까지 20분 간격으로 자동 구동 (UTC 0:00 ~ 11:00)
-    - cron: '*/20 0-10 * * *'
-    - cron: '0 11 * * *'
+    # 매일 한국 시간 아침 8:00 ~ 저녁 9:00까지 1시간 간격으로 스케줄링 (UTC 23:00, 0:00 ~ 12:00)
+    # 실제 실행 시간은 아래 Random Delay 스텝에 의해 매번 0~20분 사이로 지연됩니다.
+    - cron: '0 23,0-12 * * *'
   workflow_dispatch:
     # 깃허브 웹에서 수동으로 즉시 구동할 수 있도록 지원
 
@@ -34,6 +34,13 @@ jobs:
       run: |
         google-chrome --version
         chromedriver --version
+
+    - name: Random Delay (Bot Evasion)
+      run: |
+        # 0 ~ 1200초(20분) 사이의 랜덤 딜레이를 주어 크롤링 간격을 40~80분(평균 60분)으로 다변화합니다.
+        DELAY=$((RANDOM % 1200))
+        echo "Sleeping for $DELAY seconds to randomize access time..."
+        sleep $DELAY
 
     - name: Run Crawler
       env:
