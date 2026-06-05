@@ -443,6 +443,45 @@ def process_status_mapping(existing_rows, new_crawl_data):
     return sorted_records
 
 
+def export_sheets_to_csv(client, spreadsheet_id, output_dir):
+    """
+    구글 스프레드시트의 여러 워크시트(LIVE, 이미지, RAW, MLIVE)를
+    각각 CSV 파일로 다운로드하여 로컬 폴더에 저장합니다.
+    """
+    try:
+        spreadsheet = client.open_by_key(spreadsheet_id)
+        sheets_to_export = ["LIVE", "이미지", "RAW", "MLIVE"]
+        
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
+        for sheet_name in sheets_to_export:
+            try:
+                sheet = spreadsheet.worksheet(sheet_name)
+                records = sheet.get_all_values()
+                
+                if not records:
+                    print(f"  [CSV 내보내기] 시트 '{sheet_name}'가 비어있습니다.")
+                    continue
+                    
+                file_name = f"{sheet_name.lower()}.csv"
+                if sheet_name == "이미지":
+                    file_name = "image.csv"
+                elif sheet_name == "MLIVE":
+                    file_name = "mlive.csv"
+                    
+                file_path = os.path.join(output_dir, file_name)
+                
+                with open(file_path, "w", newline="", encoding="utf-8-sig") as f:
+                    writer = csv.writer(f)
+                    writer.writerows(records)
+                print(f"  [CSV 내보내기] 시트 '{sheet_name}' -> '{file_path}' 저장 완료")
+            except Exception as se:
+                print(f"  [CSV 내보내기 오류] 시트 '{sheet_name}' 내보내기 실패: {se}")
+    except Exception as e:
+        print(f"[CSV 내보내기 전체 오류] {e}")
+
+
 def save_to_google_sheet(service_key_json, sheet_id, data_list):
     """구글 스프레드시트에 수집된 데이터를 상태 매핑하여 덮어쓰기 저장"""
     # 만약 sheet_id에 스프레드시트 URL 전체를 넣었을 경우, ID 부분만 정규식으로 자동 추출
@@ -516,6 +555,11 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
         # 한번에 업로드
         sheet.append_rows(rows_to_write, value_input_option="USER_ENTERED")
         print(f"  [구글 시트] 기존 데이터 비교 완료. 총 {len(processed_data)}건 상태 매핑 및 덮어쓰기 완료!")
+        
+        # 4개 시트 CSV로 내보내기 (깃허브 업로드용)
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web-app", "public", "data")
+        export_sheets_to_csv(client, sheet_id, output_dir)
+        
         return True
     except Exception as e:
         print(f"[구글 시트 저장 실패] 에러 사유: {e}")

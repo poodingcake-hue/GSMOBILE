@@ -11,6 +11,8 @@ on:
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout Code
@@ -39,3 +41,10 @@ jobs:
         SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
       run: |
         python -X utf8 crawl_gsshop.py
+
+    - name: Commit and Push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add web-app/public/data/
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update data files from Google Sheets [skip ci]" && git push)
