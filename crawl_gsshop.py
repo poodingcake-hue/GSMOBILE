@@ -263,15 +263,20 @@ def collect_pgm_list_by_dayidx(driver, day_idx, date_str, date_label):
         except Exception:
             pass
             
-        # pgmId 추출
-        pgm_id = None
-        try:
-            article_el = g.find_element(By.CSS_SELECTOR, "article.prd-item[data-liveno]")
-            pgm_id = article_el.get_attribute("data-liveno")
-        except Exception:
-            pass
-            
-        if not pgm_id:
+        # pgmId 추출 (한 그룹에 여러 방송이 존재할 수 있음)
+        articles = g.find_elements(By.CSS_SELECTOR, "article.prd-item[data-liveno]")
+        if articles:
+            for art in articles:
+                pgm_id = art.get_attribute("data-liveno")
+                if pgm_id:
+                    pgm_items.append({
+                        "pgmId": pgm_id,
+                        "date": date_label,
+                        "date_str": date_str,
+                        "broadcast_time": broadcast_time
+                    })
+        else:
+            # fallback: anchor 태그로 탐색
             try:
                 anchors = g.find_elements(By.TAG_NAME, "a")
                 for a in anchors:
@@ -281,17 +286,15 @@ def collect_pgm_list_by_dayidx(driver, day_idx, date_str, date_label):
                         qs = parse_qs(parsed.query)
                         if "pgmId" in qs:
                             pgm_id = qs["pgmId"][0]
+                            pgm_items.append({
+                                "pgmId": pgm_id,
+                                "date": date_label,
+                                "date_str": date_str,
+                                "broadcast_time": broadcast_time
+                            })
                             break
             except Exception:
                 pass
-
-        if pgm_id:
-            pgm_items.append({
-                "pgmId": pgm_id,
-                "date": date_label,
-                "date_str": date_str,
-                "broadcast_time": broadcast_time
-            })
     return pgm_items
 
 
@@ -567,7 +570,7 @@ def main():
     print(f"대상 날짜: {', '.join(labels)}")
     print(f"로컬 백업 저장: {OUTPUT_FILE}\n")
 
-    driver = build_driver(headless=False)
+    driver = build_driver(headless=True)
     all_pgm_items = []
     final_products = []
 
@@ -593,12 +596,13 @@ def main():
             print(f"  => 발견된 pgmId 개수: {len(pgms)}개")
             all_pgm_items.extend(pgms)
 
-        # pgmId 기준 중복 제거
+        # (date, pgmId) 기준 중복 제거 (다른 날짜의 동일 프로그램 혹은 같은 날 다중 프로그램 수집 보장)
         seen_pgms = set()
         unique_pgm_items = []
         for item in all_pgm_items:
-            if item["pgmId"] not in seen_pgms:
-                seen_pgms.add(item["pgmId"])
+            key = (item["date"], item["pgmId"])
+            if key not in seen_pgms:
+                seen_pgms.add(key)
                 unique_pgm_items.append(item)
 
         print(f"\n[중복 제거 완료] 고유 pgmId 수: {len(unique_pgm_items)}개")

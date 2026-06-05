@@ -68,6 +68,17 @@ function formatLiveDate(rawDateStr) {
   return rawDateStr;
 }
 
+// Convert time string "HH:MM" or "H:MM" to minutes from midnight for sorting
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 9999;
+  const parts = timeStr.trim().split(':');
+  if (parts.length < 2) return 9999;
+  const hrs = parseInt(parts[0], 10);
+  const mins = parseInt(parts[1], 10);
+  if (isNaN(hrs) || isNaN(mins)) return 9999;
+  return hrs * 60 + mins;
+}
+
 function App() {
   // Raw parsed datasets
   const [mliveData, setMliveData] = useState([]);
@@ -80,7 +91,7 @@ function App() {
   
   // Navigation & filter states
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedPgmId, setSelectedPgmId] = useState('');
   const [allTimes, setAllTimes] = useState(false);
   
   // Like state: Set of program keys (date_time_pgmId)
@@ -251,7 +262,7 @@ function App() {
       progMap[key].products.push(item);
     });
     
-    const list = Object.values(progMap).sort((a, b) => a.broadcast_time.localeCompare(b.broadcast_time));
+    const list = Object.values(progMap).sort((a, b) => timeToMinutes(a.broadcast_time) - timeToMinutes(b.broadcast_time));
     
     if (allTimes) {
       return list;
@@ -268,38 +279,42 @@ function App() {
     return [...new Set(mliveData.map(p => p.date))].sort();
   }, [mliveData]);
 
-  // Extract available times for selected date
-  const availableTimes = useMemo(() => {
-    return selectedDatePrograms.map(p => p.broadcast_time);
+  // Extract available programs for selected date
+  const availablePrograms = useMemo(() => {
+    return selectedDatePrograms.map(p => ({
+      pgmId: p.pgmId,
+      broadcast_time: p.broadcast_time
+    }));
   }, [selectedDatePrograms]);
 
-  // Automatically select the first available time when selectedDate or allTimes changes
+  // Automatically select the first available program when selectedDate or allTimes changes
   const timeScrollRef = useRef(null);
 
   useEffect(() => {
-    if (availableTimes.length > 0) {
-      if (!availableTimes.includes(selectedTime)) {
-        setSelectedTime(availableTimes[0]);
+    if (availablePrograms.length > 0) {
+      const hasActivePgm = availablePrograms.some(p => p.pgmId === selectedPgmId);
+      if (!hasActivePgm) {
+        setSelectedPgmId(availablePrograms[0].pgmId);
       }
     } else {
-      setSelectedTime('');
+      setSelectedPgmId('');
     }
-  }, [availableTimes, selectedTime]);
+  }, [availablePrograms, selectedPgmId]);
 
   // Auto-scroll active time into center view
   useEffect(() => {
-    if (timeScrollRef.current && selectedTime) {
+    if (timeScrollRef.current && selectedPgmId) {
       const activeEl = timeScrollRef.current.querySelector('.time-seamless-item.active');
       if (activeEl) {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
     }
-  }, [selectedTime]);
+  }, [selectedPgmId]);
 
   // Find the currently selected program block
   const activeProgram = useMemo(() => {
-    return selectedDatePrograms.find(p => p.broadcast_time === selectedTime) || null;
-  }, [selectedDatePrograms, selectedTime]);
+    return selectedDatePrograms.find(p => p.pgmId === selectedPgmId) || null;
+  }, [selectedDatePrograms, selectedPgmId]);
 
   // Map product elements for the active program
   const activeProducts = useMemo(() => {
@@ -414,19 +429,20 @@ function App() {
         </div>
 
         {/* Seamless Time Scroll */}
-        {availableTimes.length > 0 && (
+        {availablePrograms.length > 0 && (
           <div className="time-seamless-track" ref={timeScrollRef}>
-            {availableTimes.map(time => {
-              // Check if this time's program is liked
-              const prog = selectedDatePrograms.find(p => p.broadcast_time === time);
+            {availablePrograms.map(p => {
+              // Check if this program is liked
+              const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
               const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
+              const isActive = selectedPgmId === p.pgmId;
               return (
                 <button
-                  key={time}
-                  className={`time-seamless-item ${selectedTime === time ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
-                  onClick={() => setSelectedTime(time)}
+                  key={p.pgmId}
+                  className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
+                  onClick={() => setSelectedPgmId(p.pgmId)}
                 >
-                  {time}
+                  {p.broadcast_time}
                 </button>
               );
             })}
