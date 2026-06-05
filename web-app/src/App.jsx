@@ -81,6 +81,12 @@ function timeToMinutes(timeStr) {
 }
 
 function App() {
+  // Debug configuration log
+  useEffect(() => {
+    const token = githubConfig?.token || '';
+    console.log("📢 [DEBUG] Owner:", githubConfig?.owner, "| Repo:", githubConfig?.repo, "| Token length:", token.length, "| Starts with:", token.substring(0, 4));
+  }, [githubConfig]);
+
   // Raw parsed datasets
   const [mliveData, setMliveData] = useState([]);
   const [liveData, setLiveData] = useState([]);
