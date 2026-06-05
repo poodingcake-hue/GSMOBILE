@@ -983,3 +983,46 @@ body {
   color: var(--accent-red);
   border: 1px solid rgba(239, 68, 68, 0.15);
 }
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.4rem;
+  padding: 0.2rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.settings-btn:hover {
+  background: #e2e8f0;
+  color: var(--text-dark);
+}
+
+.internal-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.token-warning-badge {
+  background: rgba(249, 115, 22, 0.08);
+  color: var(--accent-orange);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  white-space: nowrap;
+}

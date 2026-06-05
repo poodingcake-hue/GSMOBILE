@@ -3,7 +3,8 @@ import {
   X,
   Grid,
   RefreshCw,
-  Plus
+  Plus,
+  Settings
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -97,6 +98,18 @@ function App() {
   const [allTimes, setAllTimes] = useState(false);
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  const [githubConfig, setGithubConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('github_config');
+      return saved ? JSON.parse(saved) : { token: '', owner: 'poodingcake-hue', repo: 'GSMOBILE' };
+    } catch {
+      return { token: '', owner: 'poodingcake-hue', repo: 'GSMOBILE' };
+    }
+  });
+  
+  const [settingsForm, setSettingsForm] = useState(githubConfig);
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -130,6 +143,13 @@ function App() {
     });
   };
 
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    localStorage.setItem('github_config', JSON.stringify(settingsForm));
+    setGithubConfig(settingsForm);
+    setShowSettingsModal(false);
+  };
+
   const handleSaveInternal = async (e) => {
     e.preventDefault();
     setFormStatus({ loading: true, success: false, message: '' });
@@ -146,72 +166,172 @@ function App() {
       const hosts = lines[3].replace(/^\[|\]$/g, '');
       const productIds = lines.slice(4).filter(line => /^\d+$/.test(line));
       
-      const payload = {
+      const date_str = formData.date.replace(/-/g, '');
+      const pgmId = `internal_${Date.now()}`;
+      
+      const newProducts = (productIds.length > 0 ? productIds : ['']).map(prdid => ({
         date: formData.date,
+        date_str,
         broadcast_time: formData.time,
+        pgmId,
         pgmTitle,
         location,
         pd,
         hosts,
-        productIds
-      };
-      
-      const res = await fetch('/api/save-internal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!res.ok) {
-        throw new Error('서버 저장에 실패했습니다. (API 통신 오류)');
-      }
-      
-      const result = await res.json();
-      if (result.success) {
+        prdid,
+        title: '', // mapped in frontend
+        url: prdid ? `https://m.gsshop.com/prd/prd.gs?prdid=${prdid}` : ''
+      }));
+
+      // Check if we use GitHub REST API directly
+      if (githubConfig.token) {
+        const owner = githubConfig.owner || 'poodingcake-hue';
+        const repo = githubConfig.repo || 'GSMOBILE';
+        const filePath = 'web-app/public/data/internal.csv';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+        
+        // 1. Get existing file content & SHA
+        let exists = false;
+        let sha = null;
+        let existingText = '';
+        
+        try {
+          const getRes = await fetch(url, {
+            headers: {
+              'Authorization': `token ${githubConfig.token}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          
+          if (getRes.ok) {
+            const fileData = await getRes.json();
+            sha = fileData.sha;
+            exists = true;
+            const base64Clean = fileData.content.replace(/\s/g, '');
+            existingText = decodeURIComponent(atob(base64Clean).split('').map(c => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+          } else if (getRes.status !== 404) {
+            throw new Error(`깃허브 파일 조회가 실패했습니다. (Status: ${getRes.status})`);
+          }
+        } catch (getErr) {
+          throw new Error(`깃허브 연결 중 오류 발생: ${getErr.message}`);
+        }
+        
+        // 2. Prepare updated CSV content
+        let updatedCsvContent = '';
+        if (exists) {
+          updatedCsvContent = existingText;
+          if (!updatedCsvContent.endsWith('\n')) {
+            updatedCsvContent += '\n';
+          }
+        } else {
+          updatedCsvContent = '\ufeffdate,date_str,broadcast_time,pgmId,pgmTitle,location,pd,hosts,prdid,title,url\n';
+        }
+        
+        const escapeCsv = (val) => {
+          if (val === null || val === undefined) return '';
+          const str = String(val);
+          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        };
+        
+        const pgmTitleEsc = escapeCsv(pgmTitle);
+        const locationEsc = escapeCsv(location);
+        const pdEsc = escapeCsv(pd);
+        const hostsEsc = escapeCsv(hosts);
+        
+        newProducts.forEach(prod => {
+          const prdidEsc = escapeCsv(prod.prdid);
+          updatedCsvContent += `${formData.date},${date_str},${formData.time},${pgmId},${pgmTitleEsc},${locationEsc},${pdEsc},${hostsEsc},${prdidEsc},,${prod.url}\n`;
+        });
+        
+        const base64Content = btoa(unescape(encodeURIComponent(updatedCsvContent)));
+        
+        // 3. PUT updated file to GitHub
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `data: update internal schedule from browser [skip ci]`,
+            content: base64Content,
+            sha: sha || undefined
+          })
+        });
+        
+        if (!putRes.ok) {
+          const putResult = await putRes.json().catch(() => ({}));
+          throw new Error(`깃허브 저장 요청이 실패했습니다. (사유: ${putResult.message || putRes.statusText})`);
+        }
+        
+        setFormStatus({
+          loading: false,
+          success: true,
+          message: '깃허브 저장소에 직접 저장 및 배포 트리거 완료!'
+        });
+      } else {
+        // Fallback: local dev api (only if on localhost)
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          throw new Error('깃허브 토큰 설정이 필요합니다. 우측 상단 톱니바퀴 설정을 클릭해 토큰을 등록해주세요.');
+        }
+        
+        const payload = {
+          date: formData.date,
+          broadcast_time: formData.time,
+          pgmTitle,
+          location,
+          pd,
+          hosts,
+          productIds
+        };
+        
+        const res = await fetch('api/save-internal', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          throw new Error('서버 저장에 실패했습니다. (API 통신 오류)');
+        }
+        
+        const result = await res.json();
+        if (!result.success) {
+          throw new Error(result.error || '저장에 실패했습니다.');
+        }
+        
         setFormStatus({
           loading: false,
           success: true,
           message: result.message
         });
-        
-        // Update local state instantly
-        const date_str = formData.date.replace(/-/g, '');
-        const pgmId = `internal_${Date.now()}`;
-        const newProducts = (productIds.length > 0 ? productIds : ['']).map(prdid => ({
-          date: formData.date,
-          date_str,
-          broadcast_time: formData.time,
-          pgmId,
-          pgmTitle,
-          location,
-          pd,
-          hosts,
-          prdid,
-          title: '', // mapped in frontend
-          url: prdid ? `https://m.gsshop.com/prd/prd.gs?prdid=${prdid}` : ''
-        }));
-        
-        setInternalData(prev => [...prev, ...newProducts]);
-        
-        // Reset textBlock form
-        setFormData(prev => ({
-          ...prev,
-          textBlock: ''
-        }));
-        
-        // Auto-select the newly added program's date and time
-        setSelectedDate(formData.date);
-        setSelectedPgmId(pgmId);
-        
-        setTimeout(() => {
-          setShowAddModal(false);
-          setFormStatus({ loading: false, success: false, message: '' });
-        }, 1500);
-      } else {
-        throw new Error(result.error || '저장에 실패했습니다.');
       }
+      
+      // Update local state instantly
+      setInternalData(prev => [...prev, ...newProducts]);
+      
+      // Reset textBlock form
+      setFormData(prev => ({
+        ...prev,
+        textBlock: ''
+      }));
+      
+      // Auto-select the newly added program's date and time
+      setSelectedDate(formData.date);
+      setSelectedPgmId(pgmId);
+      
+      setTimeout(() => {
+        setShowAddModal(false);
+        setFormStatus({ loading: false, success: false, message: '' });
+      }, 1500);
       
     } catch (err) {
       setFormStatus({
@@ -698,14 +818,26 @@ function App() {
             })}
           </div>
           <div className="date-header-controls">
-            <button 
-              className="mode-toggle-btn" 
-              onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
-              title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
-            >
-              <RefreshCw size={14} className="toggle-icon" />
-              <span>{mode === 'crawl' ? '공식' : '사내'}</span>
-            </button>
+            <div className="controls-row">
+              <button 
+                className="mode-toggle-btn" 
+                onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
+                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+              >
+                <RefreshCw size={14} className="toggle-icon" />
+                <span>{mode === 'crawl' ? '공식' : '사내'}</span>
+              </button>
+              <button 
+                className="settings-btn"
+                onClick={() => {
+                  setSettingsForm(githubConfig);
+                  setShowSettingsModal(true);
+                }}
+                title="깃허브 토큰 설정"
+              >
+                <Settings size={14} />
+              </button>
+            </div>
             
             {mode === 'crawl' ? (
               <label className="checkbox-label" htmlFor="all-times-checkbox">
@@ -719,10 +851,15 @@ function App() {
                 모든시간
               </label>
             ) : (
-              <button className="add-program-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
-                <Plus size={16} />
-                <span>등록</span>
-              </button>
+              <div className="internal-actions-row">
+                {!githubConfig.token && (
+                  <span className="token-warning-badge" title="깃허브 토큰 설정 필요">토큰 미설정</span>
+                )}
+                <button className="add-program-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
+                  <Plus size={16} />
+                  <span>등록</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1010,6 +1147,67 @@ function App() {
                 </button>
                 <button type="submit" className="btn-submit" disabled={formStatus.loading}>
                   {formStatus.loading ? '저장 및 전송 중...' : '저장 및 깃허브 전송'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3 className="modal-title">깃허브 연동 설정</h3>
+              <button className="modal-close-btn" onClick={() => setShowSettingsModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveSettings}>
+              <div className="form-group">
+                <label className="form-label">GitHub Personal Access Token (classic)</label>
+                <input 
+                  type="password" 
+                  className="form-input"
+                  placeholder="ghp_..."
+                  required
+                  value={settingsForm.token} 
+                  onChange={e => setSettingsForm(prev => ({ ...prev, token: e.target.value }))}
+                />
+                <p className="form-help-text" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem', textAlign: 'left' }}>
+                  ※ repo 권한이 체크된 토큰이어야 하며, 사용자 브라우저(localStorage)에만 안전하게 보관됩니다.
+                </p>
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">저장소 소유자 (Owner)</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  required
+                  value={settingsForm.owner} 
+                  onChange={e => setSettingsForm(prev => ({ ...prev, owner: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">저장소 이름 (Repository)</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  required
+                  value={settingsForm.repo} 
+                  onChange={e => setSettingsForm(prev => ({ ...prev, repo: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowSettingsModal(false)}>
+                  취소
+                </button>
+                <button type="submit" className="btn-submit">
+                  저장
                 </button>
               </div>
             </form>
