@@ -117,15 +117,15 @@ body {
   display: none;
 }
 
-/* Date Card — half size */
+/* Date Card — enlarged */
 .date-card {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  border-radius: 0.5rem;
-  width: 2rem;
-  height: 2.25rem;
-  min-width: 2rem;
+  border-radius: 0.6rem;
+  width: 3rem;
+  height: 3.4rem;
+  min-width: 3rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -134,7 +134,7 @@ body {
   transition: var(--transition-smooth);
   flex-shrink: 0;
   padding: 0;
-  gap: 0.05rem;
+  gap: 0.1rem;
 }
 
 .date-card:hover {
@@ -144,18 +144,18 @@ body {
 .date-card.active {
   background: var(--accent-primary);
   color: #ffffff;
-  border-radius: 0.4rem;
+  border-radius: 0.6rem;
 }
 
 .date-card-day-name {
-  font-size: 0.5rem;
+  font-size: 0.85rem;
   font-weight: 500;
   line-height: 1;
 }
 
 .date-card-day-number {
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  font-size: 1.2rem;
   font-weight: 700;
   line-height: 1;
 }
