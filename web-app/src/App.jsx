@@ -81,6 +81,12 @@ function timeToMinutes(timeStr) {
 }
 
 function App() {
+  const [githubConfig, setGithubConfig] = useState(() => {
+    // 깃허브 보안 스캐너 우회를 위해 Base64로 인코딩된 역순 토큰을 런타임에 디코딩 및 반전합니다.
+    const defaultToken = atob('TTliODcwRE5YbEhXalpaUVNPM1JPV1YwVWVoTVBuOW02bkxPX3BoZw==').split('').reverse().join('');
+    return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
+  });
+
   // Debug configuration log
   useEffect(() => {
     const token = githubConfig?.token || '';
@@ -104,11 +110,7 @@ function App() {
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
   
-  const [githubConfig, setGithubConfig] = useState(() => {
-    // 깃허브 보안 스캐너 우회를 위해 Base64로 인코딩된 역순 토큰을 런타임에 디코딩 및 반전합니다.
-    const defaultToken = atob('TTliODcwRE5YbEhXalpaUVNPM1JPV1YwVWVoTVBuOW02bkxPX3BoZw==').split('').reverse().join('');
-    return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
-  });
+
   
 
   
