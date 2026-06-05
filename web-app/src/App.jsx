@@ -81,17 +81,6 @@ function timeToMinutes(timeStr) {
 }
 
 function App() {
-  const [githubConfig, setGithubConfig] = useState(() => {
-    // 깃허브 보안 스캐너 우회를 위해 Base64로 인코딩된 역순 토큰을 런타임에 디코딩 및 반전합니다.
-    const defaultToken = atob('TTliODcwRE5YbEhXalpaUVNPM1JPV1YwVWVoTVBuOW02bkxPX3BoZw==').split('').reverse().join('');
-    return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
-  });
-
-  // Debug configuration log
-  useEffect(() => {
-    const token = githubConfig?.token || '';
-    console.log("📢 [DEBUG] Owner:", githubConfig?.owner, "| Repo:", githubConfig?.repo, "| Token length:", token.length, "| Starts with:", token.substring(0, 4));
-  }, [githubConfig]);
 
   // Raw parsed datasets
   const [mliveData, setMliveData] = useState([]);
@@ -177,109 +166,15 @@ function App() {
         pd,
         hosts,
         prdid,
-        title: '', // mapped in frontend
+        title: '',
         url: prdid ? `https://m.gsshop.com/prd/prd.gs?prdid=${prdid}` : ''
       }));
 
-      // Check if we use GitHub REST API directly
-      if (githubConfig.token) {
-        const owner = githubConfig.owner || 'poodingcake-hue';
-        const repo = githubConfig.repo || 'GSMOBILE';
-        const filePath = 'web-app/public/data/internal.csv';
-        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-        
-        // 1. Get existing file content & SHA
-        let exists = false;
-        let sha = null;
-        let existingText = '';
-        
-        try {
-          const getRes = await fetch(url, {
-            headers: {
-              'Authorization': `Bearer ${githubConfig.token}`,
-              'Accept': 'application/vnd.github.v3+json'
-            }
-          });
-          
-          if (getRes.ok) {
-            const fileData = await getRes.json();
-            sha = fileData.sha;
-            exists = true;
-            const base64Clean = fileData.content.replace(/\s/g, '');
-            existingText = decodeURIComponent(atob(base64Clean).split('').map(c => {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-          } else if (getRes.status !== 404) {
-            throw new Error(`깃허브 파일 조회가 실패했습니다. (Status: ${getRes.status})`);
-          }
-        } catch (getErr) {
-          throw new Error(`깃허브 연결 중 오류 발생: ${getErr.message}`);
-        }
-        
-        // 2. Prepare updated CSV content
-        let updatedCsvContent = '';
-        if (exists) {
-          updatedCsvContent = existingText;
-          if (!updatedCsvContent.endsWith('\n')) {
-            updatedCsvContent += '\n';
-          }
-        } else {
-          updatedCsvContent = '\ufeffdate,date_str,broadcast_time,pgmId,pgmTitle,location,pd,hosts,prdid,title,url\n';
-        }
-        
-        const escapeCsv = (val) => {
-          if (val === null || val === undefined) return '';
-          const str = String(val);
-          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-            return `"${str.replace(/"/g, '""')}"`;
-          }
-          return str;
-        };
-        
-        const pgmTitleEsc = escapeCsv(pgmTitle);
-        const locationEsc = escapeCsv(location);
-        const pdEsc = escapeCsv(pd);
-        const hostsEsc = escapeCsv(hosts);
-        
-        newProducts.forEach(prod => {
-          const prdidEsc = escapeCsv(prod.prdid);
-          updatedCsvContent += `${formData.date},${date_str},${formData.time},${pgmId},${pgmTitleEsc},${locationEsc},${pdEsc},${hostsEsc},${prdidEsc},,${prod.url}\n`;
-        });
-        
-        const base64Content = btoa(unescape(encodeURIComponent(updatedCsvContent)));
-        
-        // 3. PUT updated file to GitHub
-        const putRes = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${githubConfig.token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: `data: update internal schedule from browser [skip ci]`,
-            content: base64Content,
-            sha: sha || undefined
-          })
-        });
-        
-        if (!putRes.ok) {
-          const putResult = await putRes.json().catch(() => ({}));
-          throw new Error(`깃허브 저장 요청이 실패했습니다. (사유: ${putResult.message || putRes.statusText})`);
-        }
-        
-        setFormStatus({
-          loading: false,
-          success: true,
-          message: '깃허브 저장소에 직접 저장 및 배포 트리거 완료!'
-        });
-      } else {
-        // Fallback: local dev api (only if on localhost)
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-          throw new Error('깃허브 토큰 설정이 필요합니다. 우측 상단 톱니바퀴 설정을 클릭해 토큰을 등록해주세요.');
-        }
-        
-        const payload = {
+      // Netlify 서버리스 함수 호출 (토큰은 서버에서만 관리됨)
+      const res = await fetch('/api/save-internal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           date: formData.date,
           broadcast_time: formData.time,
           pgmTitle,
@@ -287,42 +182,27 @@ function App() {
           pd,
           hosts,
           productIds
-        };
-        
-        const res = await fetch('api/save-internal', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          throw new Error('서버 저장에 실패했습니다. (API 통신 오류)');
-        }
-        
-        const result = await res.json();
-        if (!result.success) {
-          throw new Error(result.error || '저장에 실패했습니다.');
-        }
-        
-        setFormStatus({
-          loading: false,
-          success: true,
-          message: result.message
-        });
+        })
+      });
+      
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || '저장에 실패했습니다.');
       }
+      
+      setFormStatus({
+        loading: false,
+        success: true,
+        message: '저장 완료! 잠시 후 새로고침하면 반영됩니다.'
+      });
       
       // Update local state instantly
       setInternalData(prev => [...prev, ...newProducts]);
       
       // Reset textBlock form
-      setFormData(prev => ({
-        ...prev,
-        textBlock: ''
-      }));
+      setFormData(prev => ({ ...prev, textBlock: '' }));
       
-      // Auto-select the newly added program's date and time
+      // Auto-select the newly added program
       setSelectedDate(formData.date);
       setSelectedPgmId(pgmId);
       

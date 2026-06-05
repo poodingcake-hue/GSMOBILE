@@ -1,0 +1,23 @@
+[build]
+  command = "cd web-app && npm ci && npm run build"
+  publish = "web-app/dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA 라우팅: 모든 경로를 index.html로 연결
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# /api/* 경로는 Netlify Functions가 처리 (위 SPA 리다이렉트보다 먼저 적용됨)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true

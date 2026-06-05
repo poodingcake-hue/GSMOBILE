@@ -141,6 +141,6 @@ export default defineConfig({
       }
     }
   ],
-  base: '/GSMOBILE/',
+  base: '/',
 })
 
