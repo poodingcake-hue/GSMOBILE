@@ -418,13 +418,13 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
             sheet = spreadsheet.worksheet("MLIVE")
         except gspread.exceptions.WorksheetNotFound:
             sheet = spreadsheet.add_worksheet(title="MLIVE", rows="1000", cols="20")
-            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"])
+            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"], value_input_option="USER_ENTERED")
             print("  [구글 시트] 신규 'MLIVE' 워크시트 탭 생성 및 헤더 추가 완료")
         
         # 헤더가 비어있을 경우 생성
         existing_records = sheet.get_all_values()
         if not existing_records:
-            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"])
+            sheet.append_row(["date", "date_str", "broadcast_time", "pgmId", "pgmTitle", "prdid", "title", "url"], value_input_option="USER_ENTERED")
             print("  [구글 시트] 신규 시트에 헤더 생성 완료")
             existing_records = [[]]
 
@@ -455,7 +455,7 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
                 new_count += 1
 
         if rows_to_append:
-            sheet.append_rows(rows_to_append)
+            sheet.append_rows(rows_to_append, value_input_option="USER_ENTERED")
             print(f"  [구글 시트] 신규 상품 {new_count}건 누적 저장 완료! (중복 제거 적용)")
         else:
             print("  [구글 시트] 추가할 새로운 신규 상품이 없습니다. (모든 데이터 중복)")
@@ -469,7 +469,7 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
 def main():
     today = datetime.now()
     dates  = [(today + timedelta(days=i)).strftime("%Y%m%d") for i in range(DAYS_TO_CRAWL)]
-    labels = [(today + timedelta(days=i)).strftime("%Y-%m-%d (%a)") for i in range(DAYS_TO_CRAWL)]
+    labels = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(DAYS_TO_CRAWL)]
 
     print("GS Shop MOBILE LIVE 상세 상품 수집기 v9.1 (시간 정제 & 복원)")
     print(f"대상 날짜: {', '.join(labels)}")

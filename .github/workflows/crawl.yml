@@ -2,8 +2,9 @@ name: GS SHOP Mobile Live Crawler
 
 on:
   schedule:
-    # 매일 한국 시간 오전 8:00 (UTC 23:00)에 자동 구동
-    - cron: '0 23 * * *'
+    # 매일 한국 시간 오전 9:00 ~ 오후 8:00까지 20분 간격으로 자동 구동 (UTC 0:00 ~ 11:00)
+    - cron: '*/20 0-10 * * *'
+    - cron: '0 11 * * *'
   workflow_dispatch:
     # 깃허브 웹에서 수동으로 즉시 구동할 수 있도록 지원
 
