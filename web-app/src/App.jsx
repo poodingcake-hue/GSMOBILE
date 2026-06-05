@@ -1,10 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
   X,
-  Database,
   Grid,
   RefreshCw
 } from 'lucide-react';
@@ -257,6 +253,8 @@ function App() {
   }, [selectedDatePrograms]);
 
   // Automatically select the first available time when selectedDate or allTimes changes
+  const timeScrollRef = useRef(null);
+
   useEffect(() => {
     if (availableTimes.length > 0) {
       if (!availableTimes.includes(selectedTime)) {
@@ -266,6 +264,16 @@ function App() {
       setSelectedTime('');
     }
   }, [availableTimes, selectedTime]);
+
+  // Auto-scroll active time into center view
+  useEffect(() => {
+    if (timeScrollRef.current && selectedTime) {
+      const activeEl = timeScrollRef.current.querySelector('.time-seamless-item.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [selectedTime]);
 
   // Find the currently selected program block
   const activeProgram = useMemo(() => {
@@ -345,60 +353,58 @@ function App() {
 
   return (
     <div className="container">
-      {/* 1. Date Selector Tabs (Top) */}
-      <section className="date-scroll-wrapper">
-        {uniqueDates.map(date => {
-          const isActive = selectedDate === date;
-          
-          // Format date (e.g. 2026-06-05 -> 5)
-          const dateObj = new Date(date);
-          const dayNumber = dateObj.getDate();
-          
-          // Get Korean weekday name
-          const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-          const weekdayName = weekdays[dateObj.getDay()];
-
-          return (
-            <button
-              key={date}
-              className={`date-card ${isActive ? 'active' : ''}`}
-              onClick={() => setSelectedDate(date)}
-            >
-              <span className="date-card-day-name">{weekdayName}</span>
-              <span className="date-card-day-number">{dayNumber}</span>
-            </button>
-          );
-        })}
-      </section>
-
-      {/* 2. Time selector & Checkbox section */}
-      <section className="time-filter-section">
-        <div className="time-list-container">
-          {availableTimes.map(time => (
-            <button
-              key={time}
-              className={`time-btn ${selectedTime === time ? 'active' : ''}`}
-              onClick={() => setSelectedTime(time)}
-            >
-              {time}
-            </button>
-          ))}
+      {/* Sticky Header: Date row + Time seamless scroll */}
+      <div className="sticky-header">
+        {/* Date row + 모든시간 checkbox */}
+        <div className="date-header-row">
+          <div className="date-scroll-wrapper">
+            {uniqueDates.map(date => {
+              const isActive = selectedDate === date;
+              const dateObj = new Date(date);
+              const dayNumber = dateObj.getDate();
+              const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+              const weekdayName = weekdays[dateObj.getDay()];
+              return (
+                <button
+                  key={date}
+                  className={`date-card ${isActive ? 'active' : ''}`}
+                  onClick={() => setSelectedDate(date)}
+                >
+                  <span className="date-card-day-name">{weekdayName}</span>
+                  <span className="date-card-day-number">{dayNumber}</span>
+                </button>
+              );
+            })}
+          </div>
+          <label className="checkbox-label" htmlFor="all-times-checkbox">
+            <input
+              type="checkbox"
+              id="all-times-checkbox"
+              className="checkbox-input"
+              checked={allTimes}
+              onChange={(e) => setAllTimes(e.target.checked)}
+            />
+            모든시간
+          </label>
         </div>
-        
-        {/* Toggle Checkbox for All Times */}
-        <label className="checkbox-label" htmlFor="all-times-checkbox">
-          <input 
-            type="checkbox"
-            id="all-times-checkbox"
-            className="checkbox-input"
-            checked={allTimes}
-            onChange={(e) => setAllTimes(e.target.checked)}
-          />
-          모든시간
-        </label>
-      </section>
 
-      {/* 3. Program broadcasting Name */}
+        {/* Seamless Time Scroll */}
+        {availableTimes.length > 0 && (
+          <div className="time-seamless-track" ref={timeScrollRef}>
+            {availableTimes.map(time => (
+              <button
+                key={time}
+                className={`time-seamless-item ${selectedTime === time ? 'active' : ''}`}
+                onClick={() => setSelectedTime(time)}
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Program broadcasting Name */}
       {activeProgram && (
         <h2 className="broadcast-header">
           {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}

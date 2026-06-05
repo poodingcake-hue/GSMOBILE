@@ -73,28 +73,57 @@ body {
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
-  padding: 0.5rem 0 0 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0;
 }
 
-/* Date Selector Grid (Matching user screenshot) */
+/* ====== STICKY HEADER ====== */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Date row: dates + checkbox side by side */
+.date-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+/* Date Selector (scrollable, no scrollbar) */
 .date-scroll-wrapper {
   display: flex;
   overflow-x: auto;
-  gap: 0.75rem;
-  padding: 0.25rem 0 0.5rem 0;
-  scrollbar-width: thin;
+  gap: 0.3rem;
+  padding: 0.25rem 0 0.35rem 0;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+.date-scroll-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
+/* Date Card — half size */
 .date-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-gray);
-  border-radius: 0.75rem;
-  width: 4rem;
-  height: 4.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: 0.5rem;
+  width: 2rem;
+  height: 2.25rem;
+  min-width: 2rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -102,109 +131,104 @@ body {
   justify-content: center;
   transition: var(--transition-smooth);
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  padding: 0;
+  gap: 0.05rem;
 }
 
 .date-card:hover {
-  border-color: var(--accent-primary);
-  transform: translateY(-2px);
+  color: var(--accent-primary);
 }
 
 .date-card.active {
   background: var(--accent-primary);
-  border-color: var(--accent-primary);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  border-radius: 0.4rem;
 }
 
 .date-card-day-name {
-  font-size: 0.85rem;
+  font-size: 0.5rem;
   font-weight: 500;
-  margin-bottom: 0.15rem;
+  line-height: 1;
 }
 
 .date-card-day-number {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  line-height: 1;
 }
 
-/* Filter Bar (Time + Checkbox) */
-.time-filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.25rem;
-}
-
-@media (min-width: 640px) {
-  .time-filter-section {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-.time-list-container {
-  display: flex;
-  overflow-x: auto;
-  gap: 0.5rem;
-  padding-bottom: 0.25rem;
-  align-items: center;
-}
-
-.time-btn {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  color: var(--text-gray);
-  padding: 0.45rem 1rem;
-  border-radius: 2rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-smooth);
-  white-space: nowrap;
-}
-
-.time-btn:hover {
-  background: #f8fafc;
-  border-color: var(--text-gray);
-}
-
-.time-btn.active {
-  background: var(--text-dark);
-  border-color: var(--text-dark);
-  color: #ffffff;
-}
-
-/* Checkbox Style */
+/* Checkbox (모든시간) — right of date row */
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-gray);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  flex-shrink: 0;
+  padding-right: 0.25rem;
 }
 
 .checkbox-input {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 0.9rem;
+  height: 0.9rem;
   accent-color: var(--accent-primary);
   cursor: pointer;
 }
 
-/* Program Broadcast Title */
-.broadcast-header {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
+/* ====== SEAMLESS TIME SCROLL ====== */
+.time-seamless-track {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.4rem 1rem 0.5rem 1rem;
+  gap: 0;
+  /* Fade edges to hint overflow */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 90%, transparent 100%);
+}
+.time-seamless-track::-webkit-scrollbar {
+  display: none;
+}
+
+.time-seamless-item {
+  background: transparent;
+  border: none;
+  color: #c4ccd8;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  scroll-snap-align: center;
+  padding: 0 1.1rem;
+  transition: color 0.2s, font-weight 0.15s;
+  line-height: 1.5;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.time-seamless-item.active {
   color: var(--text-dark);
-  margin-top: 0.5rem;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.time-seamless-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5rem;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 2px;
 }
 
 /* Product Grid Layout */
@@ -212,21 +236,33 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
+  row-gap: 3vh;
   background-color: transparent;
+  padding: 0 0 3vh 0;
 }
 
 @media (min-width: 768px) {
   .product-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0;
+    row-gap: 3vh;
   }
 }
 
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 0;
+    row-gap: 3vh;
   }
+}
+
+/* Program Broadcast Title */
+.broadcast-header {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  padding: 3vh 0.75rem 1vh 0.75rem;
+  line-height: 1.4;
 }
 
 /* Product Card */
@@ -617,12 +653,9 @@ body {
 @media (max-width: 640px) {
   .container {
     padding: 0;
-    gap: 0.5rem;
+    gap: 0;
   }
-  
-  .date-scroll-wrapper,
-  .time-filter-section,
-  .broadcast-header,
+
   .empty-state {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
@@ -630,24 +663,30 @@ body {
 
   .product-grid {
     gap: 0;
+    row-gap: 3vh;
   }
 
   .product-info-body {
-    padding: 0.3rem;
+    padding: 0.25rem 0.15rem 0 0.15rem;
   }
 
   .product-title {
-    font-size: 0.675rem;
+    font-size: 0.65rem;
     line-height: 1.2;
     height: 2.4em;
   }
 
-  .product-footer-row {
-    font-size: 0.55rem;
-  }
-  
   .status-badge {
     font-size: 0.5rem;
     padding: 0.05rem 0.15rem;
+  }
+
+  .time-seamless-item {
+    font-size: 0.85rem;
+    padding: 0 0.85rem;
+  }
+
+  .time-seamless-item.active {
+    font-size: 0.95rem;
   }
 }
