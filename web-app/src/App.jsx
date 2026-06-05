@@ -440,42 +440,49 @@ function App() {
                 onClick={() => product.isOurProduct && setSelectedProduct(product)}
                 style={{ cursor: product.isOurProduct ? 'pointer' : 'default' }}
               >
-                {/* Image Wrapper */}
-                <div className="product-img-wrapper">
-                  {product.imageUrl ? (
-                    <img 
-                      src={product.imageUrl} 
-                      className="product-img" 
-                      alt={product.mappedName}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="no-image-placeholder">이미지 준비중</div>
-                  )}
+                {/* 3:4 Image Layout */}
+                <div className="product-img-layout-3-4">
+                  {/* 3:3 Image Box (Top 75%) */}
+                  <div className="product-img-box-3-3">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        className="product-img" 
+                        alt={product.mappedName}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="no-image-placeholder">이미지 준비중</div>
+                    )}
 
-                  {/* Overlays (Bottom Right) - Live Times only */}
-                  <div className="overlays-container">
-                    {product.liveTimes.map((lt, idx) => (
-                      <span key={idx} className="overlay-date-badge">
-                        {lt}
-                      </span>
-                    ))}
+                    {/* Overlays on Image - Live Times only */}
+                    {product.liveTimes.length > 0 && (
+                      <div className="overlays-container">
+                        {product.liveTimes.map((lt, idx) => (
+                          <span key={idx} className="overlay-date-badge">
+                            {lt}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3:1 Location Box (Bottom 25%) */}
+                  <div className="product-loc-box-3-1">
+                    {product.location ? (
+                      <span className="product-loc-text">{product.location}</span>
+                    ) : (
+                      <span className="product-loc-empty">-</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Info body */}
+                {/* Info body (Product Name & Status below 3:4 container) */}
                 <div className="product-info-body">
                   <h3 className="product-title" title={product.mappedName}>
                     {product.mappedName}
                   </h3>
                   
-                  <div className="product-footer-row">
-                    <span className="product-code-text">{product.prdid}</span>
-                    {product.location && (
-                      <span className="product-loc-text">{product.location}</span>
-                    )}
-                  </div>
-
                   {product.status && product.status !== '' && product.status !== '정상' && (
                     <div className="product-status-row">
                       {product.status === '신규등록' && (

@@ -1,7 +1,7 @@
 /* Clean Premium Light-Mode Design System for GS Shop Dashboard */
 
 :root {
-  --bg-main: #f8fafc;
+  --bg-main: #ffffff;
   --bg-card: #ffffff;
   --border-color: #e2e8f0;
   
@@ -211,32 +211,33 @@ body {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background-color: var(--border-color);
+  gap: 0.35rem;
+  background-color: transparent;
 }
 
 @media (min-width: 768px) {
   .product-grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
   }
 }
 
 /* Product Card */
 .product-card {
-  background: var(--bg-card);
+  background: transparent;
   border: none;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  aspect-ratio: 3 / 4;
   transition: var(--transition-smooth);
 }
 
@@ -244,18 +245,29 @@ body {
   opacity: 0.95;
 }
 
-/* Image Wrapper (3:3 square) */
-.product-img-wrapper {
+/* 3:4 Image Layout (Container holding 3:3 image + 3:1 location) */
+.product-img-layout-3-4 {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  background: #ffffff;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+}
+
+/* 3:3 Image Box (Top 75%) */
+.product-img-box-3-3 {
+  position: relative;
+  width: 100%;
+  height: 75%;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-bottom: none;
-  padding: 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .product-img {
@@ -267,6 +279,11 @@ body {
 
 .product-card:hover .product-img {
   transform: scale(1.02);
+}
+
+.no-image-placeholder {
+  color: var(--text-muted);
+  font-size: 0.65rem;
 }
 
 /* Overlay Container (Bottom Right) */
@@ -294,14 +311,37 @@ body {
   white-space: nowrap;
 }
 
-/* Product Info Body (1:4 bottom area) */
+/* 3:1 Location Box (Bottom 25%) */
+.product-loc-box-3-1 {
+  width: 100%;
+  height: 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  overflow: hidden;
+}
+
+.product-loc-text {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #2563eb;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.product-loc-empty {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+}
+
+/* Product Info Body (Below the 3:4 container) */
 .product-info-body {
-  padding: 0.35rem;
+  padding: 0.35rem 0 0 0;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   overflow: hidden;
-  justify-content: space-between;
+  gap: 0.2rem;
 }
 
 .product-title {
@@ -318,30 +358,9 @@ body {
   margin-bottom: 0.15rem;
 }
 
-.product-footer-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.625rem;
-  color: var(--text-gray);
-  margin-top: auto;
-  padding-top: 0.1rem;
-  border-top: none;
-}
-
-.product-code-text {
-  font-family: monospace;
-}
-
-.product-loc-text {
-  font-weight: 700;
-  color: var(--accent-primary);
-}
-
 .product-status-row {
   display: flex;
   gap: 0.2rem;
-  margin-top: 0.15rem;
 }
 
 .status-badge {
@@ -368,8 +387,8 @@ body {
   opacity: 0.6;
 }
 
-.product-card.excluded-state .product-img-wrapper {
-  background: #f1f5f9;
+.product-card.excluded-state .product-img-box-3-3 {
+  background: #cbd5e1;
 }
 
 .product-card.excluded-state .product-title {
