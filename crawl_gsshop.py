@@ -658,10 +658,19 @@ def main():
     service_key = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
     spreadsheet_id = os.environ.get("SPREADSHEET_ID")
 
-    sheet_saved = False
-    if service_key and spreadsheet_id:
-        print(f"\n[데이터 저장] 구글 스프레드시트({spreadsheet_id}) 누적 업로드 진행 중...")
-        sheet_saved = save_to_google_sheet(service_key, spreadsheet_id, unique_products)
+    if not service_key:
+        print("[경고/오류] GCP_SERVICE_ACCOUNT_KEY 환경 변수가 설정되지 않았습니다.")
+        sys.exit(1)
+    if not spreadsheet_id:
+        print("[경고/오류] SPREADSHEET_ID 환경 변수가 설정되지 않았습니다.")
+        sys.exit(1)
+
+    print(f"\n[데이터 저장] 구글 스프레드시트({spreadsheet_id}) 누적 업로드 진행 중...")
+    sheet_saved = save_to_google_sheet(service_key, spreadsheet_id, unique_products)
+    
+    if not sheet_saved:
+        print("[오류] 구글 스프레드시트 저장에 실패하였습니다.")
+        sys.exit(1)
 
     # 로컬 백업 CSV 저장 (기존 데이터 비교 후 상태 매핑 및 덮어쓰기)
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), OUTPUT_FILE)
