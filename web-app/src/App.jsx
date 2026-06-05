@@ -355,9 +355,22 @@ function App() {
   const selectedDatePrograms = useMemo(() => {
     if (!selectedDate) return [];
     
+    // Get current date (YYYY-MM-DD) and current hour
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    const todayDateStr = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+    const currentHour = now.getHours();
+
     const progMap = {};
     mliveData.forEach(item => {
       if (item.date !== selectedDate) return;
+      
+      // Filter out past hours if today
+      if (selectedDate === todayDateStr) {
+        const bHour = parseInt(item.broadcast_time.split(':')[0], 10);
+        if (bHour < currentHour - 1) return;
+      }
+
       const key = `${item.broadcast_time}_${item.pgmId}`;
       if (!progMap[key]) {
         progMap[key] = {
@@ -724,7 +737,6 @@ function App() {
                 <span className="stock-page-code">{selectedProduct.prdid}</span>
                 {selectedProduct.location && (
                   <span className="stock-page-location">
-                    <span role="img" aria-label="excel" style={{ marginRight: '4px' }}>📊</span> 
                     {selectedProduct.location}
                   </span>
                 )}
@@ -733,11 +745,11 @@ function App() {
 
             {/* 2D Stock Matrix table */}
             {matrixData.colors.length > 0 ? (
-              <div className={`matrix-table-container ${matrixData.sizes.length >= 8 ? 'scrollable' : 'fit-screen'}`}>
+              <div className={`matrix-table-container ${matrixData.sizes.length >= 6 ? 'scrollable' : 'fit-screen'}`}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
-                      <th className="color-col-header">색상</th>
+                      <th className="color-col-header"></th>
                       {matrixData.sizes.map(size => (
                         <th key={size}>{size}</th>
                       ))}
