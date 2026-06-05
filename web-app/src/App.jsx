@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   X,
   Grid,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -85,6 +86,7 @@ function App() {
   const [liveData, setLiveData] = useState([]);
   const [imageData, setImageData] = useState([]);
   const [rawData, setRawData] = useState([]);
+  const [internalData, setInternalData] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,7 +95,20 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPgmId, setSelectedPgmId] = useState('');
   const [allTimes, setAllTimes] = useState(false);
+  const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
+  const [showAddModal, setShowAddModal] = useState(false);
   
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    time: '08:00',
+    textBlock: ''
+  });
+  const [formStatus, setFormStatus] = useState({
+    loading: false,
+    success: false,
+    message: ''
+  });
+
   // Like state: Set of program keys (date_time_pgmId)
   const [likedPrograms, setLikedPrograms] = useState(() => {
     try {
@@ -113,6 +128,98 @@ function App() {
       localStorage.setItem('liked_programs', JSON.stringify([...next]));
       return next;
     });
+  };
+
+  const handleSaveInternal = async (e) => {
+    e.preventDefault();
+    setFormStatus({ loading: true, success: false, message: '' });
+    
+    try {
+      const lines = formData.textBlock.trim().split('\n').map(line => line.trim());
+      if (lines.length < 4) {
+        throw new Error('사내 데이터 규격이 맞지 않습니다. 최소 4행(방송명, 스튜디오, PD, 호스트) 이상이어야 합니다.');
+      }
+      
+      const pgmTitle = lines[0];
+      const location = lines[1];
+      const pd = lines[2].replace(/^\[|\]$/g, '');
+      const hosts = lines[3].replace(/^\[|\]$/g, '');
+      const productIds = lines.slice(4).filter(line => /^\d+$/.test(line));
+      
+      const payload = {
+        date: formData.date,
+        broadcast_time: formData.time,
+        pgmTitle,
+        location,
+        pd,
+        hosts,
+        productIds
+      };
+      
+      const res = await fetch('/api/save-internal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        throw new Error('서버 저장에 실패했습니다. (API 통신 오류)');
+      }
+      
+      const result = await res.json();
+      if (result.success) {
+        setFormStatus({
+          loading: false,
+          success: true,
+          message: result.message
+        });
+        
+        // Update local state instantly
+        const date_str = formData.date.replace(/-/g, '');
+        const pgmId = `internal_${Date.now()}`;
+        const newProducts = (productIds.length > 0 ? productIds : ['']).map(prdid => ({
+          date: formData.date,
+          date_str,
+          broadcast_time: formData.time,
+          pgmId,
+          pgmTitle,
+          location,
+          pd,
+          hosts,
+          prdid,
+          title: '', // mapped in frontend
+          url: prdid ? `https://m.gsshop.com/prd/prd.gs?prdid=${prdid}` : ''
+        }));
+        
+        setInternalData(prev => [...prev, ...newProducts]);
+        
+        // Reset textBlock form
+        setFormData(prev => ({
+          ...prev,
+          textBlock: ''
+        }));
+        
+        // Auto-select the newly added program's date and time
+        setSelectedDate(formData.date);
+        setSelectedPgmId(pgmId);
+        
+        setTimeout(() => {
+          setShowAddModal(false);
+          setFormStatus({ loading: false, success: false, message: '' });
+        }, 1500);
+      } else {
+        throw new Error(result.error || '저장에 실패했습니다.');
+      }
+      
+    } catch (err) {
+      setFormStatus({
+        loading: false,
+        success: false,
+        message: err.message
+      });
+    }
   };
 
   // Modal state
@@ -246,9 +353,12 @@ function App() {
       fetch(`data/raw.csv?t=${cacheBuster}`).then(r => {
         if (!r.ok) throw new Error('raw.csv 파일을 불러올 수 없습니다.');
         return r.text();
-      })
+      }),
+      fetch(`data/internal.csv?t=${cacheBuster}`)
+        .then(r => r.ok ? r.text() : '')
+        .catch(() => '')
     ])
-      .then(([mliveText, liveText, imageText, rawText]) => {
+      .then(([mliveText, liveText, imageText, rawText, internalText]) => {
         // 1. Parse MLIVE
         const mliveRows = parseCSVToRows(mliveText);
         const mliveHeaders = mliveRows[0];
@@ -273,6 +383,23 @@ function App() {
         const rawRows = parseCSVToRows(rawText);
         setRawData(rawRows);
 
+        // 5. Parse INTERNAL
+        let internalList = [];
+        if (internalText) {
+          const internalRows = parseCSVToRows(internalText);
+          if (internalRows.length > 1) {
+            const internalHeaders = internalRows[0];
+            internalList = internalRows.slice(1).map(r => {
+              const obj = {};
+              internalHeaders.forEach((h, idx) => {
+                obj[h] = r[idx] || '';
+              });
+              return obj;
+            });
+          }
+        }
+        setInternalData(internalList);
+
         // Auto-select the first date
         if (mliveList.length > 0) {
           const uniqueDates = [...new Set(mliveList.map(item => item.date))].sort();
@@ -289,6 +416,20 @@ function App() {
         setLoading(false);
       });
   }, []);
+
+  // Auto-select first date from active dataset when mode changes
+  useEffect(() => {
+    const activeDataset = mode === 'internal' ? internalData : mliveData;
+    if (activeDataset.length > 0) {
+      const dates = [...new Set(activeDataset.map(item => item.date))].sort();
+      if (dates.length > 0 && !dates.includes(selectedDate)) {
+        setSelectedDate(dates[0]);
+        window.history.replaceState({ date: dates[0] }, '', `#date=${dates[0]}`);
+      }
+    } else {
+      setSelectedDate('');
+    }
+  }, [mode, mliveData, internalData]);
 
   // Detect column mapping indices for raw.csv
   const rawColumnIndices = useMemo(() => {
@@ -351,7 +492,7 @@ function App() {
     return new Set(rawData.slice(1).map(row => row[idx]).filter(Boolean));
   }, [rawData, rawColumnIndices]);
 
-  // Group MLIVE entries by broadcast hour for selected date
+  // Group MLIVE/INTERNAL entries by broadcast hour for selected date
   const selectedDatePrograms = useMemo(() => {
     if (!selectedDate) return [];
     
@@ -362,7 +503,8 @@ function App() {
     const currentHour = now.getHours();
 
     const progMap = {};
-    mliveData.forEach(item => {
+    const activeDataset = mode === 'internal' ? internalData : mliveData;
+    activeDataset.forEach(item => {
       if (item.date !== selectedDate) return;
       
       // Filter out past hours if today
@@ -378,6 +520,9 @@ function App() {
           pgmTitle: item.pgmTitle,
           broadcast_time: item.broadcast_time,
           date: item.date,
+          location: item.location || '',
+          pd: item.pd || '',
+          hosts: item.hosts || '',
           products: []
         };
       }
@@ -386,7 +531,7 @@ function App() {
     
     const list = Object.values(progMap).sort((a, b) => timeToMinutes(a.broadcast_time) - timeToMinutes(b.broadcast_time));
     
-    if (allTimes) {
+    if (allTimes || mode === 'internal') {
       return list;
     } else {
       // Show only times that contain at least one product matching raw.csv
@@ -394,12 +539,13 @@ function App() {
         prog.products.some(p => ourProductIds.has(p.prdid))
       );
     }
-  }, [mliveData, selectedDate, allTimes, ourProductIds]);
+  }, [mliveData, internalData, mode, selectedDate, allTimes, ourProductIds]);
 
   // Extract unique dates for tab rendering
   const uniqueDates = useMemo(() => {
-    return [...new Set(mliveData.map(p => p.date))].sort();
-  }, [mliveData]);
+    const activeDataset = mode === 'internal' ? internalData : mliveData;
+    return [...new Set(activeDataset.map(p => p.date))].sort();
+  }, [mliveData, internalData, mode]);
 
   // Extract available programs for selected date
   const availablePrograms = useMemo(() => {
@@ -530,7 +676,7 @@ function App() {
     <div className="container">
       {/* Sticky Header: Date row + Time seamless scroll */}
       <div className="sticky-header">
-        {/* Date row + 모든시간 checkbox */}
+        {/* Date row + 모든시간 checkbox or mode toggle control */}
         <div className="date-header-row">
           <div className="date-scroll-wrapper">
             {uniqueDates.map(date => {
@@ -551,16 +697,34 @@ function App() {
               );
             })}
           </div>
-          <label className="checkbox-label" htmlFor="all-times-checkbox">
-            <input
-              type="checkbox"
-              id="all-times-checkbox"
-              className="checkbox-input"
-              checked={allTimes}
-              onChange={(e) => setAllTimes(e.target.checked)}
-            />
-            모든시간
-          </label>
+          <div className="date-header-controls">
+            <button 
+              className="mode-toggle-btn" 
+              onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
+              title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+            >
+              <RefreshCw size={14} className="toggle-icon" />
+              <span>{mode === 'crawl' ? '공식' : '사내'}</span>
+            </button>
+            
+            {mode === 'crawl' ? (
+              <label className="checkbox-label" htmlFor="all-times-checkbox">
+                <input
+                  type="checkbox"
+                  id="all-times-checkbox"
+                  className="checkbox-input"
+                  checked={allTimes}
+                  onChange={(e) => setAllTimes(e.target.checked)}
+                />
+                모든시간
+              </label>
+            ) : (
+              <button className="add-program-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
+                <Plus size={16} />
+                <span>등록</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Seamless Time Scroll */}
@@ -590,6 +754,9 @@ function App() {
         <h2 className="broadcast-header">
           <span className="broadcast-header-text">
             {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
+            {activeProgram.location && ` / 스튜디오: ${activeProgram.location}`}
+            {activeProgram.pd && ` / PD: ${activeProgram.pd}`}
+            {activeProgram.hosts && ` / 호스트: ${activeProgram.hosts}`}
           </span>
           <button
             className={`heart-btn ${likedPrograms.has(getLikeKey(activeProgram)) ? 'liked' : ''}`}
@@ -784,6 +951,70 @@ function App() {
               )}
             </div>
           </div>
+      )}
+
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3 className="modal-title">사내 편성 정보 등록</h3>
+              <button className="modal-close-btn" onClick={() => setShowAddModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveInternal}>
+              <div className="form-group">
+                <label className="form-label">방송일 선택</label>
+                <input 
+                  type="date" 
+                  className="form-input"
+                  required 
+                  value={formData.date} 
+                  onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">방송시간 선택</label>
+                <input 
+                  type="time" 
+                  className="form-input"
+                  required 
+                  value={formData.time} 
+                  onChange={e => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">사내 데이터 입력란 (엑셀 셀 붙여넣기)</label>
+                <textarea 
+                  className="form-textarea"
+                  required 
+                  placeholder="예시:&#10;[멀티A]코어&#10;M3&#10;[김경언]&#10;[임민수,최세인]&#10;1103683581&#10;1103681696"
+                  value={formData.textBlock}
+                  onChange={e => setFormData(prev => ({ ...prev, textBlock: e.target.value }))}
+                  rows={8}
+                />
+              </div>
+              
+              {formStatus.message && (
+                <div className={`form-status-msg ${formStatus.success ? 'success' : 'error'}`}>
+                  {formStatus.message}
+                </div>
+              )}
+              
+              <div className="form-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>
+                  취소
+                </button>
+                <button type="submit" className="btn-submit" disabled={formStatus.loading}>
+                  {formStatus.loading ? '저장 및 전송 중...' : '저장 및 깃허브 전송'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
