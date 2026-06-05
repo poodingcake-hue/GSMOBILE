@@ -19,7 +19,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # ── 설정 ────────────────────────────────────────────────
-DAYS_TO_CRAWL = 4
+DAYS_TO_CRAWL = 1
 OUTPUT_FILE   = "gsshop_mobile_live_products.csv"  # 로컬 저장용 파일명
 WAIT_SEC      = 15
 SCROLL_PAUSE  = 1.0
@@ -83,8 +83,24 @@ def click_element(driver, el, desc=""):
 
 
 def goto_schedule_page(driver):
-    """메인 페이지 접속 후 편성표 탭 클릭"""
-    print(f"[1] 메인 페이지 접속: {MAIN_URL}")
+    """편성표 페이지 직접 이동 (SHOPPY 탭 파라미터 적용)"""
+    target_url = "https://m.gsshop.com/main/broadSchedule?mseq=W00323&broadType=SHOPPY"
+    print(f"[1] 편성표 페이지 직접 이동: {target_url}")
+    try:
+        driver.get(target_url)
+        time.sleep(5)
+        # 만약 페이지가 정상 로드되지 않았거나 다른 URL로 리다이렉트된 경우의 대비
+        if "broadSchedule" in driver.current_url:
+            print("  [성공] 편성표 페이지 진입 완료")
+            return True
+    except UnexpectedAlertPresentException:
+        handle_alert(driver)
+        return True
+    except Exception as e:
+        print(f"  [오류] 직접 URL 이동 실패: {e}")
+
+    # 기존 방식의 fallback 작동
+    print("[2] fallback: 메인 페이지 경유 및 편성표 탭 탐색...")
     try:
         driver.get(MAIN_URL)
         time.sleep(4)
@@ -93,7 +109,6 @@ def goto_schedule_page(driver):
     
     handle_alert(driver)
 
-    print("[2] 편성표 탭 탐색...")
     schedule_tab_strategies = [
         ("XPATH", "//*[text()='편성표']"),
         ("XPATH", "//*[contains(text(),'편성표')]"),
@@ -120,9 +135,19 @@ def goto_schedule_page(driver):
 
 
 def click_mobile_live_tab(driver):
-    """MOBILE LIVE 서브탭 클릭"""
-    print("[3] MOBILE LIVE 탭 탐색...")
+    """MOBILE LIVE 서브탭 클릭 (이미 선택되어 있으면 패스)"""
+    try:
+        shoppy_el = driver.find_element(By.CSS_SELECTOR, "nav.grow a[data-type='SHOPPY'], .item[data-type='SHOPPY']")
+        if "on" in shoppy_el.get_attribute("class"):
+            print("  [성공] SHOPPY (MOBILE LIVE) 탭이 이미 활성화되어 있습니다.")
+            return True
+    except Exception:
+        pass
+
+    print("[3] MOBILE LIVE 탭 탐색 및 클릭 시도...")
     strategies = [
+        ("CSS",   "nav.grow a[data-type='SHOPPY']"),
+        ("CSS",   ".item[data-type='SHOPPY']"),
         ("XPATH", "//*[text()='MOBILE LIVE']"),
         ("XPATH", "//*[contains(text(),'MOBILE LIVE')]"),
         ("XPATH", "//*[text()='모바일 라이브']"),
@@ -228,25 +253,35 @@ def collect_pgm_list_by_dayidx(driver, day_idx, date_str, date_label):
     편성표 페이지에서 각 날짜별 고유 pgmId 목록 수집 (시간 정보 포함)
     """
     pgm_items = []
-    try:
-        container = driver.find_element(By.CSS_SELECTOR, f".shoppy-schedule-data[data-dayidx='{day_idx}']")
-    except NoSuchElementException:
-        print(f"  [경고] 컨테이너(dayidx={day_idx})를 찾을 수 없습니다.")
-        return pgm_items
-
-    mix_articles = container.find_elements(By.CSS_SELECTOR, "article.prd-item.horizon.mix")
-    for mix in mix_articles:
-        pgm_id = get_pgm_id_from_mix(mix)
-        
+    groups = driver.find_elements(By.CSS_SELECTOR, ".prd-group.typeB[data-broadcast='shoppy']")
+    for g in groups:
         # 방송 시간 추출
         broadcast_time = ""
         try:
-            date_el = mix.find_element(By.CSS_SELECTOR, "p.date")
-            broadcast_time = date_el.text.strip().replace("\n", " ")
+            time_el = g.find_element(By.CSS_SELECTOR, ".prd-group-head h3.ttl")
+            broadcast_time = time_el.text.strip().replace("\n", " ")
         except Exception:
+            pass
+            
+        # pgmId 추출
+        pgm_id = None
+        try:
+            article_el = g.find_element(By.CSS_SELECTOR, "article.prd-item[data-liveno]")
+            pgm_id = article_el.get_attribute("data-liveno")
+        except Exception:
+            pass
+            
+        if not pgm_id:
             try:
-                time_el = mix.find_element(By.CSS_SELECTOR, ".badge-abs, [class*='time']")
-                broadcast_time = time_el.text.strip().replace("\n", " ")
+                anchors = g.find_elements(By.TAG_NAME, "a")
+                for a in anchors:
+                    href = a.get_attribute("href") or ""
+                    if "pgmId=" in href:
+                        parsed = urlparse(href)
+                        qs = parse_qs(parsed.query)
+                        if "pgmId" in qs:
+                            pgm_id = qs["pgmId"][0]
+                            break
             except Exception:
                 pass
 
@@ -443,44 +478,6 @@ def process_status_mapping(existing_rows, new_crawl_data):
     return sorted_records
 
 
-def export_sheets_to_csv(client, spreadsheet_id, output_dir):
-    """
-    구글 스프레드시트의 여러 워크시트(LIVE, 이미지, RAW, MLIVE)를
-    각각 CSV 파일로 다운로드하여 로컬 폴더에 저장합니다.
-    """
-    try:
-        spreadsheet = client.open_by_key(spreadsheet_id)
-        sheets_to_export = ["LIVE", "이미지", "RAW", "MLIVE"]
-        
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-            
-        for sheet_name in sheets_to_export:
-            try:
-                sheet = spreadsheet.worksheet(sheet_name)
-                records = sheet.get_all_values()
-                
-                if not records:
-                    print(f"  [CSV 내보내기] 시트 '{sheet_name}'가 비어있습니다.")
-                    continue
-                    
-                file_name = f"{sheet_name.lower()}.csv"
-                if sheet_name == "이미지":
-                    file_name = "image.csv"
-                elif sheet_name == "MLIVE":
-                    file_name = "mlive.csv"
-                    
-                file_path = os.path.join(output_dir, file_name)
-                
-                with open(file_path, "w", newline="", encoding="utf-8-sig") as f:
-                    writer = csv.writer(f)
-                    writer.writerows(records)
-                print(f"  [CSV 내보내기] 시트 '{sheet_name}' -> '{file_path}' 저장 완료")
-            except Exception as se:
-                print(f"  [CSV 내보내기 오류] 시트 '{sheet_name}' 내보내기 실패: {se}")
-    except Exception as e:
-        print(f"[CSV 내보내기 전체 오류] {e}")
-
 
 def save_to_google_sheet(service_key_json, sheet_id, data_list):
     """구글 스프레드시트에 수집된 데이터를 상태 매핑하여 덮어쓰기 저장"""
@@ -555,11 +552,6 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
         # 한번에 업로드
         sheet.append_rows(rows_to_write, value_input_option="USER_ENTERED")
         print(f"  [구글 시트] 기존 데이터 비교 완료. 총 {len(processed_data)}건 상태 매핑 및 덮어쓰기 완료!")
-        
-        # 4개 시트 CSV로 내보내기 (깃허브 업로드용)
-        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web-app", "public", "data")
-        export_sheets_to_csv(client, sheet_id, output_dir)
-        
         return True
     except Exception as e:
         print(f"[구글 시트 저장 실패] 에러 사유: {e}")
@@ -580,23 +572,20 @@ def main():
     final_products = []
 
     try:
-        # ==========================================
-        # Step 1: 편성표 페이지 진입 후 고유 pgmId 목록 수집
-        # ==========================================
-        if not goto_schedule_page(driver):
-            print("편성표 페이지 진입 불가로 종료합니다.")
-            return
-        
-        click_mobile_live_tab(driver)
-        time.sleep(3)
-
         for idx in range(DAYS_TO_CRAWL):
             date_str = dates[idx]
             date_label = labels[idx]
 
-            print(f"\n[편성표 조회] {date_label} ({date_str}) 날짜 탭 클릭 중...")
-            click_date_tab_by_idx(driver, idx)
-            time.sleep(2)
+            target_url = f"https://m.gsshop.com/main/broadSchedule?mseq=W00323&broadType=SHOPPY&broadDate={date_str}"
+            print(f"\n[편성표 조회] {date_label} ({date_str}) 이동: {target_url}")
+            try:
+                driver.get(target_url)
+                time.sleep(5)
+            except UnexpectedAlertPresentException:
+                handle_alert(driver)
+                
+            handle_alert(driver)
+            click_mobile_live_tab(driver)
             scroll_to_bottom(driver)
             time.sleep(1.5)
 
@@ -642,15 +631,27 @@ def main():
     finally:
         driver.quit()
 
-    # 중복 방지를 위한 디듀플리케이션 (pgmId, prdid 기준)
+    # 중복 방지를 위한 디듀플리케이션 (pgmId, prdid 기준) - 유효한 타이틀 우선 선택
     unique_products = []
     if final_products:
-        seen_keys = set()
+        seen_keys = {}
         for r in final_products:
             key = (r['pgmId'], r['prdid'])
-            if key not in seen_keys:
-                seen_keys.add(key)
-                unique_products.append(r)
+            title = r.get('title', '')
+            
+            is_poor_title = "종료되었습니다" in title or len(title) < 5
+            
+            if key in seen_keys:
+                existing_title = seen_keys[key].get('title', '')
+                existing_poor = "종료되었습니다" in existing_title or len(existing_title) < 5
+                
+                if existing_poor and not is_poor_title:
+                    seen_keys[key] = r
+                elif not existing_poor and not is_poor_title and len(title) > len(existing_title):
+                    seen_keys[key] = r
+            else:
+                seen_keys[key] = r
+        unique_products = list(seen_keys.values())
 
     # ==========================================
     # Step 3: 데이터 저장 (Google Sheets / 로컬 CSV)
@@ -658,19 +659,15 @@ def main():
     service_key = os.environ.get("GCP_SERVICE_ACCOUNT_KEY")
     spreadsheet_id = os.environ.get("SPREADSHEET_ID")
 
-    if not service_key:
-        print("[경고/오류] GCP_SERVICE_ACCOUNT_KEY 환경 변수가 설정되지 않았습니다.")
-        sys.exit(1)
-    if not spreadsheet_id:
-        print("[경고/오류] SPREADSHEET_ID 환경 변수가 설정되지 않았습니다.")
-        sys.exit(1)
-
-    print(f"\n[데이터 저장] 구글 스프레드시트({spreadsheet_id}) 누적 업로드 진행 중...")
-    sheet_saved = save_to_google_sheet(service_key, spreadsheet_id, unique_products)
-    
-    if not sheet_saved:
-        print("[오류] 구글 스프레드시트 저장에 실패하였습니다.")
-        sys.exit(1)
+    if not service_key or not spreadsheet_id:
+        print("[정보] GCP_SERVICE_ACCOUNT_KEY 또는 SPREADSHEET_ID가 누락되었습니다. 구글 시트 저장을 생략하고 로컬 CSV 저장만 수행합니다.")
+    else:
+        print(f"\n[데이터 저장] 구글 스프레드시트({spreadsheet_id}) 누적 업로드 진행 중...")
+        sheet_saved = save_to_google_sheet(service_key, spreadsheet_id, unique_products)
+        if not sheet_saved:
+            print("[오류] 구글 스프레드시트 저장에 실패하였습니다.")
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                sys.exit(1)
 
     # 로컬 백업 CSV 저장 (기존 데이터 비교 후 상태 매핑 및 덮어쓰기)
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), OUTPUT_FILE)
