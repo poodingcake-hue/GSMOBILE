@@ -213,47 +213,32 @@ body {
   cursor: pointer;
   white-space: nowrap;
   scroll-snap-align: center;
-  padding: 0 1.1rem;
-  transition: color 0.2s, font-weight 0.15s;
+  padding: 0.25rem 0.9rem;
+  border-radius: 0.6rem;
+  transition: all 0.2s;
   line-height: 1.5;
   flex-shrink: 0;
-  position: relative;
 }
 
 .time-seamless-item.active {
-  color: var(--text-dark);
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.time-seamless-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1.5rem;
-  height: 2px;
   background: var(--accent-primary);
-  border-radius: 2px;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 /* Liked time item — pink background */
 .time-seamless-item.liked {
   color: #ffffff;
   background: var(--accent-pink);
-  border-radius: 1rem;
-  padding: 0.05rem 1rem;
   font-weight: 600;
 }
 
+/* Active takes priority over Liked */
 .time-seamless-item.liked.active {
+  background: var(--accent-primary);
   color: #ffffff;
   font-weight: 800;
-}
-
-.time-seamless-item.liked.active::after {
-  background: #ffffff;
 }
 
 /* Product Grid Layout */
