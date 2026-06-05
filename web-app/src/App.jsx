@@ -298,13 +298,17 @@ function App() {
         }
       }
       
-      // 2. Mapped image URL
+      // 2. Mapped image URL (sheet first, fallback to GS CDN)
       let imageUrl = '';
       if (imageData.length > 1) {
         const foundImg = imageData.slice(1).find(row => row[imageColumnIndices.prdid] === prdid);
-        if (foundImg) {
+        if (foundImg && foundImg[imageColumnIndices.url]) {
           imageUrl = getGoogleDriveDirectLink(foundImg[imageColumnIndices.url]);
         }
+      }
+      // Fallback: GS Shop CDN URL
+      if (!imageUrl && prdid) {
+        imageUrl = `https://asset.m-gs.kr/prod/${prdid}/1/550`;
       }
       
       // 3. Mapped live dates (format to DD/HH:MM)
