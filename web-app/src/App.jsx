@@ -118,6 +118,32 @@ function App() {
   // Modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // History API for Back Button integration
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (selectedProduct) {
+        setSelectedProduct(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedProduct]);
+
+  const openStockPage = (product) => {
+    if (product.isOurProduct) {
+      setSelectedProduct(product);
+      window.history.pushState({ stockOpen: true }, '', '#stock');
+    }
+  };
+
+  const closeStockPage = () => {
+    if (window.location.hash === '#stock') {
+      window.history.back(); // triggers popstate which sets selectedProduct to null
+    } else {
+      setSelectedProduct(null);
+    }
+  };
+
   // Load datasets on mount
   useEffect(() => {
     setLoading(true);
@@ -509,7 +535,7 @@ function App() {
               <div 
                 key={product.prdid} 
                 className={`product-card ${isExcluded ? 'excluded-state' : ''}`}
-                onClick={() => product.isOurProduct && setSelectedProduct(product)}
+                onClick={() => openStockPage(product)}
                 style={{ cursor: product.isOurProduct ? 'pointer' : 'default' }}
               >
                 {/* 3:3.4 Image Layout */}
@@ -572,7 +598,7 @@ function App() {
         <div className="stock-page-container">
           <div className="stock-page-header">
             <h3 className="stock-page-title">재고 수량 확인</h3>
-            <button className="stock-page-close-btn" onClick={() => setSelectedProduct(null)}>
+            <button className="stock-page-close-btn" onClick={closeStockPage}>
               <X size={24} />
             </button>
           </div>
