@@ -196,7 +196,7 @@ function App() {
         try {
           const getRes = await fetch(url, {
             headers: {
-              'Authorization': `token ${githubConfig.token}`,
+              'Authorization': `Bearer ${githubConfig.token}`,
               'Accept': 'application/vnd.github.v3+json'
             }
           });
@@ -252,7 +252,7 @@ function App() {
         const putRes = await fetch(url, {
           method: 'PUT',
           headers: {
-            'Authorization': `token ${githubConfig.token}`,
+            'Authorization': `Bearer ${githubConfig.token}`,
             'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json'
           },
