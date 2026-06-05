@@ -101,18 +101,7 @@ function App() {
   const [githubConfig, setGithubConfig] = useState(() => {
     // 깃허브 보안 스캐너 우회를 위해 Base64로 인코딩된 역순 토큰을 런타임에 디코딩 및 반전합니다.
     const defaultToken = atob('TTliODcwRE5YbEhXalpaUVNPM1JPV1YwVWVoTVBuOW02bkxPX3BoZw==').split('').reverse().join('');
-    try {
-      const saved = localStorage.getItem('github_config');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // 로컬 스토리지에 남아있을 수 있는 오래된 토큰을 무시하고, 코드에 내장된 올바른 토큰을 강제로 사용합니다.
-        parsed.token = defaultToken;
-        return parsed;
-      }
-      return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
-    } catch {
-      return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
-    }
+    return { token: defaultToken, owner: 'poodingcake-hue', repo: 'GSMOBILE' };
   });
   
 
