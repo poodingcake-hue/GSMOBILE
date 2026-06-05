@@ -499,7 +499,7 @@ def save_to_google_sheet(service_key_json, sheet_id, data_list):
 
     try:
         scopes = [
-            "https://www.googleapis.com/auth/sheets",
+            "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
         # JSON 키 파싱 및 크레덴셜 생성
