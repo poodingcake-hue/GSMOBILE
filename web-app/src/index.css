@@ -255,7 +255,7 @@ body {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  column-gap: 6vw;
   row-gap: 3vh;
   background-color: transparent;
   padding: 0 0 3vh 0;
@@ -264,6 +264,7 @@ body {
 @media (min-width: 768px) {
   .product-grid {
     grid-template-columns: repeat(4, 1fr);
+    column-gap: 6vw;
     row-gap: 3vh;
   }
 }
@@ -271,6 +272,7 @@ body {
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(5, 1fr);
+    column-gap: 6vw;
     row-gap: 3vh;
   }
 }
@@ -281,7 +283,7 @@ body {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-dark);
-  padding: 3vh 0.75rem 1vh 0.75rem;
+  padding: 3vh 0.75rem 6vw 0.75rem;
   line-height: 1.4;
   display: flex;
   align-items: flex-start;
@@ -362,6 +364,7 @@ body {
   justify-content: center;
   overflow: hidden;
   border-bottom: none;
+  padding: 5%;
 }
 
 .product-img {
