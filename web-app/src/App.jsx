@@ -169,6 +169,42 @@ function App() {
     }
   };
 
+  // Touch Swipe for navigating times
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.changedTouches[0].screenX;
+    touchStartY.current = e.changedTouches[0].screenY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const touchEndY = e.changedTouches[0].screenY;
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+
+    // Check if horizontal swipe and more than 50px
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (availablePrograms.length === 0) return;
+      
+      const currentIndex = availablePrograms.findIndex(p => p.pgmId === selectedPgmId);
+      if (currentIndex === -1) return;
+
+      if (diffX > 0) {
+        // Swiped left -> next time
+        if (currentIndex < availablePrograms.length - 1) {
+          handleTimeClick(availablePrograms[currentIndex + 1].pgmId);
+        }
+      } else {
+        // Swiped right -> prev time
+        if (currentIndex > 0) {
+          handleTimeClick(availablePrograms[currentIndex - 1].pgmId);
+        }
+      }
+    }
+  };
+
   // Load datasets on mount
   useEffect(() => {
     setLoading(true);
@@ -552,7 +588,11 @@ function App() {
         </div>
       ) : (
         /* 4. Products Grid */
-        <main className="product-grid">
+        <main 
+          className="product-grid"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {activeProducts.map(product => {
             const isExcluded = product.status === '편성제외';
             const showCard = product.isOurProduct || allTimes;
