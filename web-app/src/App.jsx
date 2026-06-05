@@ -712,11 +712,12 @@ function App() {
   const activeProducts = useMemo(() => {
     if (!activeProgram) return [];
     
-    return activeProgram.products.map(p => {
+    // 기본 사내/공식 상품 정보 매핑 함수
+    const mapProductDetails = (p) => {
       const prdid = p.prdid;
       
-      // 1. Mapped product name (from raw.csv, fall back to mlive)
-      let name = p.title;
+      // 1. Mapped product name (from raw.csv, fall back to default title)
+      let name = p.title || p.pgmTitle || '';
       let location = '';
       if (rawData.length > 1) {
         const foundInv = rawData.slice(1).find(row => row[rawColumnIndices.prdid] === prdid);
@@ -769,10 +770,77 @@ function App() {
         imageUrl,
         image2Url,
         liveTimes,
-        isOurProduct: ourProductIds.has(prdid)
+        isOurProduct: ourProductIds.has(prdid),
+        comparisonStatus: null
       };
-    });
-  }, [activeProgram, rawData, imageData, liveData, rawColumnIndices, imageColumnIndices, liveColumnIndices, ourProductIds]);
+    };
+
+    const mappedManualProducts = activeProgram.products.map(mapProductDetails);
+
+    // 사내 모드일 때 공식 웹 크롤링 데이터와의 비교를 수행합니다.
+    if (mode === 'internal') {
+      // 동시간대 공식 방송 데이터들 추출
+      const candidateOfficialItems = mliveData.filter(item => 
+        item.date === selectedDate && item.broadcast_time === activeProgram.broadcast_time
+      );
+
+      // pgmId별로 공식 방송 그룹화
+      const officialProgramsMap = {};
+      candidateOfficialItems.forEach(item => {
+        if (!officialProgramsMap[item.pgmId]) {
+          officialProgramsMap[item.pgmId] = {
+            pgmId: item.pgmId,
+            pgmTitle: item.pgmTitle,
+            products: []
+          };
+        }
+        officialProgramsMap[item.pgmId].products.push(item);
+      });
+
+      const officialPrograms = Object.values(officialProgramsMap);
+      const manualPrdids = new Set(activeProgram.products.map(p => p.prdid).filter(Boolean));
+
+      // 최소 1개 이상의 상품 코드가 일치하는 공식 방송 중 최대 일치 방송 매칭
+      let pairedOfficialProgram = null;
+      let maxOverlapCount = 0;
+
+      officialPrograms.forEach(prog => {
+        const progPrdids = prog.products.map(p => p.prdid).filter(Boolean);
+        const overlapCount = progPrdids.filter(id => manualPrdids.has(id)).length;
+        
+        if (overlapCount >= 1 && overlapCount > maxOverlapCount) {
+          maxOverlapCount = overlapCount;
+          pairedOfficialProgram = prog;
+        }
+      });
+
+      if (pairedOfficialProgram) {
+        const officialPrdids = new Set(pairedOfficialProgram.products.map(p => p.prdid).filter(Boolean));
+
+        // 1) 사내 등록 상품 중 공식 웹에 없는 상품 (편성 제외)
+        mappedManualProducts.forEach(prod => {
+          if (prod.prdid && !officialPrdids.has(prod.prdid)) {
+            prod.comparisonStatus = 'excluded';
+          }
+        });
+
+        // 2) 공식 웹에 있지만 사내 계획에 없는 상품 (신규 추가)
+        const addedOfficialProducts = pairedOfficialProgram.products.filter(item => 
+          item.prdid && !manualPrdids.has(item.prdid)
+        );
+
+        const mappedAddedProducts = addedOfficialProducts.map(p => {
+          const mapped = mapProductDetails(p);
+          mapped.comparisonStatus = 'added';
+          return mapped;
+        });
+
+        return [...mappedManualProducts, ...mappedAddedProducts];
+      }
+    }
+
+    return mappedManualProducts;
+  }, [activeProgram, rawData, imageData, liveData, rawColumnIndices, imageColumnIndices, liveColumnIndices, ourProductIds, mode, mliveData, selectedDate]);
 
   // Render 2D Inventory Matrix mapping for selectedProduct
   const matrixData = useMemo(() => {
@@ -922,14 +990,21 @@ function App() {
         >
           {activeProducts.map(product => {
             const isExcluded = product.status === '편성제외';
-            const showCard = product.isOurProduct || allTimes;
+            const showCard = mode === 'internal' || product.isOurProduct || allTimes;
             
             if (!showCard) return null;
+
+            let cardClasses = `product-card ${isExcluded ? 'excluded-state' : ''}`;
+            if (product.comparisonStatus === 'excluded') {
+              cardClasses += ' comparison-excluded';
+            } else if (product.comparisonStatus === 'added') {
+              cardClasses += ' comparison-added';
+            }
 
             return (
               <div 
                 key={product.prdid} 
-                className={`product-card ${isExcluded ? 'excluded-state' : ''}`}
+                className={cardClasses}
                 onClick={() => openStockPage(product)}
                 style={{ cursor: product.isOurProduct ? 'pointer' : 'default' }}
               >
@@ -976,6 +1051,15 @@ function App() {
                     {product.mappedName}
                   </h3>
                   
+                  {product.comparisonStatus && (
+                    <div className="product-status-row">
+                      {product.comparisonStatus === 'excluded' ? (
+                        <span className="status-badge comparison-excluded">공식 웹 제외</span>
+                      ) : (
+                        <span className="status-badge comparison-added">공식 웹 추가</span>
+                      )}
+                    </div>
+                  )}
                   {product.status === '편성제외' && (
                     <div className="product-status-row">
                       <span className="status-badge excluded">제외</span>

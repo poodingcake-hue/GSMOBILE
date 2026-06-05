@@ -472,6 +472,18 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
+.status-badge.comparison-excluded {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-badge.comparison-added {
+  background: var(--accent-blue-bg);
+  color: var(--accent-primary);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 /* Canceled/Excluded card state */
 .product-card.excluded-state {
   opacity: 0.6;
@@ -484,6 +496,21 @@ body {
 .product-card.excluded-state .product-title {
   text-decoration: line-through;
   color: var(--text-muted);
+}
+
+/* Comparison states for manual vs official mismatch detection */
+.product-card.comparison-excluded .product-img-layout-3-3_4 {
+  border: 1.5px solid rgba(239, 68, 68, 0.5) !important;
+  background-color: rgba(239, 68, 68, 0.02);
+}
+
+.product-card.comparison-added .product-img-layout-3-3_4 {
+  border: 1.5px dashed var(--accent-primary) !important;
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.product-card.comparison-added {
+  opacity: 0.85;
 }
 
 /* Stock Page Styles (Full Screen) */
