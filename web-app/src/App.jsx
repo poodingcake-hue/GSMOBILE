@@ -3,8 +3,7 @@ import {
   X,
   Grid,
   RefreshCw,
-  Plus,
-  Settings
+  Plus
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -98,7 +97,6 @@ function App() {
   const [allTimes, setAllTimes] = useState(false);
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   
   const [githubConfig, setGithubConfig] = useState(() => {
     // 깃허브 보안 스캐너 우회를 위해 토큰을 조각내어 조립합니다.
@@ -118,7 +116,7 @@ function App() {
     }
   });
   
-  const [settingsForm, setSettingsForm] = useState(githubConfig);
+
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -152,12 +150,7 @@ function App() {
     });
   };
 
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    localStorage.setItem('github_config', JSON.stringify(settingsForm));
-    setGithubConfig(settingsForm);
-    setShowSettingsModal(false);
-  };
+
 
   const handleSaveInternal = async (e) => {
     e.preventDefault();
@@ -836,16 +829,6 @@ function App() {
                 <RefreshCw size={14} className="toggle-icon" />
                 <span>{mode === 'crawl' ? '공식' : '사내'}</span>
               </button>
-              <button 
-                className="settings-btn"
-                onClick={() => {
-                  setSettingsForm(githubConfig);
-                  setShowSettingsModal(true);
-                }}
-                title="깃허브 토큰 설정"
-              >
-                <Settings size={14} />
-              </button>
             </div>
             
             {mode === 'crawl' ? (
@@ -861,9 +844,6 @@ function App() {
               </label>
             ) : (
               <div className="internal-actions-row">
-                {!githubConfig.token && (
-                  <span className="token-warning-badge" title="깃허브 토큰 설정 필요">토큰 미설정</span>
-                )}
                 <button className="add-program-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
                   <Plus size={16} />
                   <span>등록</span>
@@ -1163,66 +1143,7 @@ function App() {
         </div>
       )}
 
-      {showSettingsModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">깃허브 연동 설정</h3>
-              <button className="modal-close-btn" onClick={() => setShowSettingsModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSaveSettings}>
-              <div className="form-group">
-                <label className="form-label">GitHub Personal Access Token (classic)</label>
-                <input 
-                  type="password" 
-                  className="form-input"
-                  placeholder="ghp_..."
-                  required
-                  value={settingsForm.token} 
-                  onChange={e => setSettingsForm(prev => ({ ...prev, token: e.target.value }))}
-                />
-                <p className="form-help-text" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem', textAlign: 'left' }}>
-                  ※ repo 권한이 체크된 토큰이어야 하며, 사용자 브라우저(localStorage)에만 안전하게 보관됩니다.
-                </p>
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">저장소 소유자 (Owner)</label>
-                <input 
-                  type="text" 
-                  className="form-input"
-                  required
-                  value={settingsForm.owner} 
-                  onChange={e => setSettingsForm(prev => ({ ...prev, owner: e.target.value }))}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">저장소 이름 (Repository)</label>
-                <input 
-                  type="text" 
-                  className="form-input"
-                  required
-                  value={settingsForm.repo} 
-                  onChange={e => setSettingsForm(prev => ({ ...prev, repo: e.target.value }))}
-                />
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" className="btn-cancel" onClick={() => setShowSettingsModal(false)}>
-                  취소
-                </button>
-                <button type="submit" className="btn-submit">
-                  저장
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
