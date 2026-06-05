@@ -213,7 +213,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
   scroll-snap-align: center;
-  padding: 0.25rem 0.9rem;
+  padding: 0.25rem 0.72rem;
   border-radius: 0.6rem;
   transition: all 0.2s;
   line-height: 1.5;
