@@ -6,21 +6,23 @@
   --border-color: #e2e8f0;
   
   /* Accent Colors */
-  --accent-primary: #3b82f6;      /* Blue matching user screenshot active tab */
+  --accent-primary: #3b82f6;
   --accent-hover: #2563eb;
   --accent-blue-bg: rgba(59, 130, 246, 0.08);
   --accent-orange: #f97316;
   --accent-teal: #0d9488;
   --accent-red: #ef4444;
+  --accent-pink: #f43f5e;
+  --accent-pink-light: #fdf2f4;
   
   /* Text Colors */
   --text-dark: #0f172a;
   --text-gray: #475569;
   --text-muted: #94a3b8;
   
-  /* Fonts */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', var(--font-sans);
+  /* Fonts — Pretendard */
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: 'Pretendard', var(--font-sans);
   
   /* Transitions and Shadows */
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -231,6 +233,24 @@ body {
   border-radius: 2px;
 }
 
+/* Liked time item — pink background */
+.time-seamless-item.liked {
+  color: #ffffff;
+  background: var(--accent-pink);
+  border-radius: 1rem;
+  padding: 0.05rem 1rem;
+  font-weight: 600;
+}
+
+.time-seamless-item.liked.active {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.time-seamless-item.liked.active::after {
+  background: #ffffff;
+}
+
 /* Product Grid Layout */
 .product-grid {
   display: grid;
@@ -263,6 +283,44 @@ body {
   color: var(--text-dark);
   padding: 3vh 0.75rem 1vh 0.75rem;
   line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.broadcast-header-text {
+  flex: 1;
+}
+
+/* Heart (like) button */
+.heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.1rem 0.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 1.15rem;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  margin-top: 0.05rem;
+}
+
+.heart-btn:hover {
+  transform: scale(1.2);
+}
+
+.heart-btn.liked {
+  color: var(--accent-pink);
+  animation: heartPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
 }
 
 /* Product Card */

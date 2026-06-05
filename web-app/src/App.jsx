@@ -83,6 +83,27 @@ function App() {
   const [selectedTime, setSelectedTime] = useState('');
   const [allTimes, setAllTimes] = useState(false);
   
+  // Like state: Set of program keys (date_time_pgmId)
+  const [likedPrograms, setLikedPrograms] = useState(() => {
+    try {
+      const saved = localStorage.getItem('liked_programs');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const getLikeKey = (prog) => `${prog.date}_${prog.broadcast_time}_${prog.pgmId}`;
+
+  const toggleLike = (prog) => {
+    const key = getLikeKey(prog);
+    setLikedPrograms(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      localStorage.setItem('liked_programs', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
   // Modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -395,15 +416,20 @@ function App() {
         {/* Seamless Time Scroll */}
         {availableTimes.length > 0 && (
           <div className="time-seamless-track" ref={timeScrollRef}>
-            {availableTimes.map(time => (
-              <button
-                key={time}
-                className={`time-seamless-item ${selectedTime === time ? 'active' : ''}`}
-                onClick={() => setSelectedTime(time)}
-              >
-                {time}
-              </button>
-            ))}
+            {availableTimes.map(time => {
+              // Check if this time's program is liked
+              const prog = selectedDatePrograms.find(p => p.broadcast_time === time);
+              const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
+              return (
+                <button
+                  key={time}
+                  className={`time-seamless-item ${selectedTime === time ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
+                  onClick={() => setSelectedTime(time)}
+                >
+                  {time}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -411,7 +437,16 @@ function App() {
       {/* Program broadcasting Name */}
       {activeProgram && (
         <h2 className="broadcast-header">
-          {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
+          <span className="broadcast-header-text">
+            {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
+          </span>
+          <button
+            className={`heart-btn ${likedPrograms.has(getLikeKey(activeProgram)) ? 'liked' : ''}`}
+            onClick={() => toggleLike(activeProgram)}
+            aria-label="좋아요"
+          >
+            {likedPrograms.has(getLikeKey(activeProgram)) ? '♥️' : '♡'}
+          </button>
         </h2>
       )}
 
