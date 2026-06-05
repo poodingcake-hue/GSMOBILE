@@ -266,6 +266,13 @@ body {
   padding: 0 0 min(3vh, 24px) 0;
 }
 
+@media (min-width: 768px) {
+  .product-grid {
+    column-gap: 8px; /* Desktop smaller gap */
+    row-gap: 12px;
+  }
+}
+
 /* Program Broadcast Title */
 .broadcast-header {
   font-family: var(--font-display);
@@ -277,6 +284,12 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .broadcast-header {
+    padding: 16px 0.75rem 10px 0.75rem; /* Desktop smaller padding */
+  }
 }
 
 .broadcast-header-text {
