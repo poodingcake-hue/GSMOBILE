@@ -38,7 +38,7 @@ jobs:
         mkdir -p web-app/public/data/
         git add web-app/public/data/ || echo "Nothing to stage"
         if ! git diff --quiet || ! git diff --staged --quiet; then
-          git commit -m "Auto-update CSV data files from Google Sheets [skip ci]"
+          git commit -m "Auto-update CSV data files from Google Sheets"
           git pull --rebase origin main
           git push
         fi
