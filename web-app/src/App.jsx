@@ -5,7 +5,8 @@ import {
   CheckCircle2, 
   X,
   Database,
-  Grid
+  Grid,
+  RefreshCw
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -93,19 +94,19 @@ function App() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch('/data/mlive.csv').then(r => {
+      fetch('data/mlive.csv').then(r => {
         if (!r.ok) throw new Error('mlive.csv 파일을 불러올 수 없습니다.');
         return r.text();
       }),
-      fetch('/data/live.csv').then(r => {
+      fetch('data/live.csv').then(r => {
         if (!r.ok) throw new Error('live.csv 파일을 불러올 수 없습니다.');
         return r.text();
       }),
-      fetch('/data/image.csv').then(r => {
+      fetch('data/image.csv').then(r => {
         if (!r.ok) throw new Error('image.csv 파일을 불러올 수 없습니다.');
         return r.text();
       }),
-      fetch('/data/raw.csv').then(r => {
+      fetch('data/raw.csv').then(r => {
         if (!r.ok) throw new Error('raw.csv 파일을 불러올 수 없습니다.');
         return r.text();
       })
