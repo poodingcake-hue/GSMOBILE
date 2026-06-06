@@ -80,6 +80,17 @@ function timeToMinutes(timeStr) {
   return hrs * 60 + mins;
 }
 
+// Convert "YYYY-MM-DD" to "D일(요일)"
+function formatHeaderDate(dateStr) {
+  if (!dateStr) return '';
+  const dateObj = new Date(dateStr);
+  if (isNaN(dateObj.getTime())) return dateStr;
+  const day = dateObj.getDate();
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  const weekdayName = weekdays[dateObj.getDay()];
+  return `${day}일(${weekdayName})`;
+}
+
 function App() {
 
   // Raw parsed datasets
@@ -823,7 +834,7 @@ function App() {
       {activeProgram && (
         <h2 className="broadcast-header">
           <span className="broadcast-header-text">
-            {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
+            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
             {activeProgram.location && ` / 스튜디오: ${activeProgram.location}`}
             {activeProgram.pd && ` / PD: ${activeProgram.pd}`}
             {activeProgram.hosts && ` / 호스트: ${activeProgram.hosts}`}
