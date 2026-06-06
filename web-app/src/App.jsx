@@ -91,9 +91,32 @@ function formatHeaderDate(dateStr) {
   return `${day}일(${weekdayName})`;
 }
 
+const FlowerIcon = () => (
+  <svg 
+    viewBox="0 0 24 24" 
+    width="16" 
+    height="16" 
+    fill="currentColor"
+    style={{ 
+      display: 'inline-block', 
+      verticalAlign: '-2px', 
+      margin: '0 0.45rem', 
+      color: 'var(--accent-pink)',
+      flexShrink: 0
+    }}
+  >
+    <path d="M12 8.5c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5 1.77 1.5 3-.67 1.5-1.5 1.5zm3.18 1.82c-.59-.59-.59-1.54 0-2.12s2.05-.34 2.64.25c.59.59.34 2.05-.25 2.64s-1.8-.18-2.39-.77zM12 15.5c.83 0 1.5.67 1.5 1.5s-.67 3-1.5 3-1.5-1.77-1.5-3 .67-1.5 1.5-1.5zm-3.18-5.18c.59.59.59 1.54 0 2.12s-2.05.34-2.64-.25c-.59-.59-.34-2.05.25-2.64s1.8.18 2.39.77zm6.36 3.36c.59.59.34 2.05-.25 2.64s-2.05.34-2.64-.25.18-1.8.77-2.39 1.54-.59 2.12 0zm-9.54-1.18c.59-.59 1.54-.59 2.12 0s.34 2.05-.25 2.64-2.05.34-2.64-.25-.18-1.8.77-2.39zM12 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+  </svg>
+);
+
 // Clean program title based on brand brackets and keyword rules
-function cleanProgramTitle(title) {
+function cleanProgramTitle(title, mode) {
   if (!title) return '모바일 라이브';
+  
+  // Apply brackets extraction only to crawled data. Manual (internal) is returned as is.
+  if (mode === 'internal') {
+    return title;
+  }
   
   const bracketRegex = /\[([^\]]+)\]/g;
   const brackets = [];
@@ -112,16 +135,16 @@ function cleanProgramTitle(title) {
   const keywords = [
     'SJ', '라삐아프', '제이슨우', '아뜰리에', '브리엘', 
     '모르간', '분트로이', '김서룡', '르네크루', '스케쳐스', 
-    'FILA', '지프', '스튜디오디페', '쏘내추럴'
+    'FILA', '지프', '스튜디오디페', '쏘내추럴', '코어'
   ];
   
   const foundKeywords = [];
   keywords.forEach(keyword => {
     const regex = new RegExp(keyword, 'i');
     if (regex.test(remainingText)) {
-      const badge = `[${keyword}]`;
-      // Check if it's already in brackets or foundKeywords
-      const isDuplicate = brackets.some(b => b.toLowerCase() === badge.toLowerCase()) || 
+      const badge = keyword; // Excluded keywords are output without brackets.
+      
+      const isDuplicate = brackets.some(b => b.toLowerCase().includes(badge.toLowerCase())) || 
                           foundKeywords.some(fk => fk.toLowerCase() === badge.toLowerCase());
       if (!isDuplicate) {
         foundKeywords.push(badge);
@@ -875,7 +898,9 @@ function App() {
       {activeProgram && (
         <h2 className="broadcast-header">
           <span className="broadcast-header-text">
-            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송 — {cleanProgramTitle(activeProgram.pgmTitle)}
+            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송
+            <FlowerIcon />
+            {cleanProgramTitle(activeProgram.pgmTitle, mode)}
             {activeProgram.location && ` / 스튜디오: ${activeProgram.location}`}
             {activeProgram.pd && ` / PD: ${activeProgram.pd}`}
             {activeProgram.hosts && ` / 호스트: ${activeProgram.hosts}`}
