@@ -884,45 +884,38 @@ function App() {
                 onClick={() => openStockPage(product)}
                 style={{ cursor: product.isOurProduct ? 'pointer' : 'default' }}
               >
-                {/* 3:3.4 Image Layout */}
-                <div className="product-img-layout-3-3_4">
-                  {/* 3:3 Image Box */}
-                  <div className="product-img-box-3-3">
-                    {product.imageUrl ? (
-                      <img 
-                        src={product.imageUrl} 
-                        className="product-img" 
-                        alt={product.mappedName}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="no-image-placeholder">이미지 준비중</div>
-                    )}
+                {/* Image Container (Full bleed) */}
+                <div className="product-img-container">
+                  {product.imageUrl ? (
+                    <img 
+                      src={product.imageUrl} 
+                      className="product-img" 
+                      alt={product.mappedName}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="no-image-placeholder">이미지 준비중</div>
+                  )}
 
-                    {/* Overlays on Image - Live Times only */}
-                    {product.liveTimes.length > 0 && (
-                      <div className="overlays-container">
-                        {product.liveTimes.map((lt, idx) => (
-                          <span key={idx} className="overlay-date-badge">
-                            {lt}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Location Box */}
-                  <div className="product-loc-box-3-1">
-                    {product.location ? (
-                      <span className="product-loc-text">{product.location}</span>
-                    ) : (
-                      <span className="product-loc-empty">-</span>
-                    )}
-                  </div>
+                  {/* Overlays on Image - Live Times only */}
+                  {product.liveTimes.length > 0 && (
+                    <div className="overlays-container">
+                      {product.liveTimes.map((lt, idx) => (
+                        <span key={idx} className="overlay-date-badge">
+                          {lt}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Info body (Product Name & Status below 3:3.4 container) */}
+                {/* Info body (Product Name & Status below image container) */}
                 <div className="product-info-body">
+                  {/* Location / Brand */}
+                  <div className="product-loc-brand">
+                    {product.location || '-'}
+                  </div>
+
                   <h3 className="product-title" title={product.mappedName}>
                     {product.mappedName}
                   </h3>
