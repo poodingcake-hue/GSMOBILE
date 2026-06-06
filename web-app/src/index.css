@@ -371,17 +371,30 @@ body {
   pointer-events: none;
 }
 
-/* Date Overlay Labels */
+/* Date Overlay Labels (Pill badge styling like Musinsa / Photo 2) */
 .overlay-date-badge {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(2px);
   color: #ffffff;
   font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 0.55rem;
-  padding: 0.05rem 0.2rem;
-  border-radius: 0.15rem;
+  font-weight: 800;
+  font-size: 0.68rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  line-height: 1.2;
+}
+
+/* Dynamic colors based on total dates count */
+.overlay-date-badge.badge-pink {
+  background-color: var(--accent-pink);
+}
+
+.overlay-date-badge.badge-blue {
+  background-color: var(--accent-primary);
+}
+
+.overlay-date-badge.badge-green {
+  background-color: #10b981;
 }
 
 /* Location (Styled like Musinsa brand label) */

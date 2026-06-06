@@ -49,7 +49,7 @@ function getGoogleDriveDirectLink(url) {
   return url;
 }
 
-// Format date string YYYY-MM-DD H:MM to DD/HH:MM
+// Format date string YYYY-MM-DD H:MM to "D일(요일) HH:MM"
 function formatLiveDate(rawDateStr) {
   if (!rawDateStr) return '';
   const parts = rawDateStr.trim().split(' ');
@@ -57,14 +57,27 @@ function formatLiveDate(rawDateStr) {
     const datePart = parts[0]; // YYYY-MM-DD
     const timePart = parts[1]; // H:MM or HH:MM
     
+    // Parse parts manually to avoid Date timezone shifts
     const dateSub = datePart.split('-');
-    const day = dateSub.length >= 3 ? dateSub[2] : datePart;
+    if (dateSub.length < 3) return rawDateStr;
+    const year = parseInt(dateSub[0], 10);
+    const month = parseInt(dateSub[1], 10) - 1; // 0-based index
+    const day = parseInt(dateSub[2], 10);
     
     const timeSub = timePart.split(':');
-    const hour = timeSub[0].padStart(2, '0');
-    const min = timeSub.length >= 2 ? timeSub[1].padStart(2, '0') : '00';
+    const hour = parseInt(timeSub[0], 10);
+    const min = timeSub.length >= 2 ? parseInt(timeSub[1], 10) : 0;
     
-    return `${day}/${hour}:${min}`;
+    const dateObj = new Date(year, month, day, hour, min);
+    if (isNaN(dateObj.getTime())) return rawDateStr;
+    
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekdayName = weekdays[dateObj.getDay()];
+    
+    const formattedHour = String(hour).padStart(2, '0');
+    const formattedMin = String(min).padStart(2, '0');
+    
+    return `${day}일(${weekdayName}) ${formattedHour}:${formattedMin}`;
   }
   return rawDateStr;
 }
@@ -977,11 +990,18 @@ function App() {
                   {/* Overlays on Image - Live Times only */}
                   {product.liveTimes.length > 0 && (
                     <div className="overlays-container">
-                      {product.liveTimes.map((lt, idx) => (
-                        <span key={idx} className="overlay-date-badge">
-                          {lt}
-                        </span>
-                      ))}
+                      {product.liveTimes.map((lt, idx) => {
+                        const count = product.liveTimes.length;
+                        let badgeColorClass = 'badge-pink';
+                        if (count === 2) badgeColorClass = 'badge-blue';
+                        else if (count >= 3) badgeColorClass = 'badge-green';
+                        
+                        return (
+                          <span key={idx} className={`overlay-date-badge ${badgeColorClass}`}>
+                            {lt}
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
