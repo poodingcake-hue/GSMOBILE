@@ -91,6 +91,47 @@ function formatHeaderDate(dateStr) {
   return `${day}일(${weekdayName})`;
 }
 
+// Clean program title based on brand brackets and keyword rules
+function cleanProgramTitle(title) {
+  if (!title) return '모바일 라이브';
+  
+  const bracketRegex = /\[([^\]]+)\]/g;
+  const brackets = [];
+  let match;
+  
+  while ((match = bracketRegex.exec(title)) !== null) {
+    brackets.push(match[0]);
+  }
+  
+  if (brackets.length === 0) {
+    return title;
+  }
+  
+  const remainingText = title.replace(/\[[^\]]+\]/g, ' ');
+  
+  const keywords = [
+    'SJ', '라삐아프', '제이슨우', '아뜰리에', '브리엘', 
+    '모르간', '분트로이', '김서룡', '르네크루', '스케쳐스', 
+    'FILA', '지프', '스튜디오디페', '쏘내추럴'
+  ];
+  
+  const foundKeywords = [];
+  keywords.forEach(keyword => {
+    const regex = new RegExp(keyword, 'i');
+    if (regex.test(remainingText)) {
+      const badge = `[${keyword}]`;
+      // Check if it's already in brackets or foundKeywords
+      const isDuplicate = brackets.some(b => b.toLowerCase() === badge.toLowerCase()) || 
+                          foundKeywords.some(fk => fk.toLowerCase() === badge.toLowerCase());
+      if (!isDuplicate) {
+        foundKeywords.push(badge);
+      }
+    }
+  });
+  
+  return [...brackets, ...foundKeywords].join(' ');
+}
+
 function App() {
 
   // Raw parsed datasets
@@ -834,7 +875,7 @@ function App() {
       {activeProgram && (
         <h2 className="broadcast-header">
           <span className="broadcast-header-text">
-            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송 — {activeProgram.pgmTitle || '모바일 라이브'}
+            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송 — {cleanProgramTitle(activeProgram.pgmTitle)}
             {activeProgram.location && ` / 스튜디오: ${activeProgram.location}`}
             {activeProgram.pd && ` / PD: ${activeProgram.pd}`}
             {activeProgram.hosts && ` / 호스트: ${activeProgram.hosts}`}
