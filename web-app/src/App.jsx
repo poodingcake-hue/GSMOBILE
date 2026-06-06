@@ -991,10 +991,9 @@ function App() {
                   {product.liveTimes.length > 0 && (
                     <div className="overlays-container">
                       {product.liveTimes.map((lt, idx) => {
-                        const count = product.liveTimes.length;
                         let badgeColorClass = 'badge-pink';
-                        if (count === 2) badgeColorClass = 'badge-blue';
-                        else if (count >= 3) badgeColorClass = 'badge-green';
+                        if (idx === 1) badgeColorClass = 'badge-blue';
+                        else if (idx >= 2) badgeColorClass = 'badge-green';
                         
                         return (
                           <span key={idx} className={`overlay-date-badge ${badgeColorClass}`}>
