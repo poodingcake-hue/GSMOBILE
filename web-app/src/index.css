@@ -245,17 +245,10 @@ body {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  column-gap: min(6vw, 28px);
-  row-gap: min(3vh, 24px);
+  column-gap: 8px;
+  row-gap: 12px;
   background-color: transparent;
-  padding: 0 0 min(3vh, 24px) 0;
-}
-
-@media (min-width: 768px) {
-  .product-grid {
-    column-gap: 8px; /* Desktop smaller gap */
-    row-gap: 12px;
-  }
+  padding: 0 8px min(3vh, 24px) 8px;
 }
 
 /* Program Broadcast Title */
