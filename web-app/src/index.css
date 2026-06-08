@@ -1015,14 +1015,14 @@ body {
 /* Desktop Stock Page Popup (Responsive) */
 @media (min-width: 900px) {
   #root {
-    margin-left: calc(50% - 100px);
-    margin-right: auto;
+    margin: 0 auto;
+    transform: translateX(60px);
   }
 
   .stock-page-container {
     position: fixed;
     top: 50%;
-    left: max(1rem, calc(50% - 100px - 400px - 2rem));
+    left: 2rem;
     transform: translateY(-50%);
     width: 400px;
     height: 80vh;
