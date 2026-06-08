@@ -209,6 +209,14 @@ function App() {
     message: ''
   });
 
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 900);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 900);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Like state: Set of program keys (date_time_pgmId)
   const [likedPrograms, setLikedPrograms] = useState(() => {
     try {
@@ -850,99 +858,167 @@ function App() {
     <div className="container">
       {/* Sticky Header: Right Control Panel on Desktop */}
       <div className="sticky-header">
-        
-        {/* 1. Mode Toggle (Full Width) */}
-        <div className="controls-row-top">
-          <button 
-            className="mode-toggle-btn full-width-btn" 
-            onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
-            title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
-          >
-            <RefreshCw size={14} className="toggle-icon" />
-            <span>{mode === 'crawl' ? '공식 데이터 보기' : '사내 편성표 보기'}</span>
-          </button>
-        </div>
-
-        <div className="panel-section time-date-section">
-          {/* 2. Date row with arrows */}
-          <div className="scroll-row-with-arrows">
-            <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
-              <ChevronLeft />
-            </button>
-            <div className="date-scroll-wrapper" ref={dateScrollRef}>
-              {uniqueDates.map(date => {
-                const isActive = selectedDate === date;
-                const dateObj = new Date(date);
-                const dayNumber = dateObj.getDate();
-                const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-                const weekdayName = weekdays[dateObj.getDay()];
-                return (
-                  <button
-                    key={date}
-                    className={`date-card ${isActive ? 'active' : ''}`}
-                    onClick={() => handleDateClick(date)}
-                  >
-                    <span className="date-card-day-name">{weekdayName}</span>
-                    <span className="date-card-day-number">{dayNumber}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
-              <ChevronRight />
-            </button>
-          </div>
-        {availablePrograms.length > 0 && (
-          <div className="scroll-row-with-arrows time-scroll-section">
-            <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, -100)}>
-              <ChevronLeft />
-            </button>
-            <div className="time-seamless-track" ref={timeScrollRef}>
-              {availablePrograms.map(p => {
-                // Check if this program is liked
-                const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
-                const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
-                const isActive = selectedPgmId === p.pgmId;
-                return (
-                  <button
-                    key={p.pgmId}
-                    className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
-                    onClick={() => handleTimeClick(p.pgmId)}
-                  >
-                    {p.broadcast_time}
-                  </button>
-                );
-              })}
-            </div>
-            <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, 100)}>
-              <ChevronRight />
-            </button>
-          </div>
-        )}
-        </div>
-
-        {/* 4. Options (Checkbox / Register) */}
-        <div className="options-row-bottom panel-section">
-          {mode === 'crawl' ? (
-            <label className="checkbox-label" htmlFor="all-times-checkbox">
-              <input
-                type="checkbox"
-                id="all-times-checkbox"
-                className="checkbox-input"
-                checked={allTimes}
-                onChange={(e) => setAllTimes(e.target.checked)}
-              />
-              모든시간 표시
-            </label>
-          ) : (
-            <div className="internal-actions-row">
-              <button className="add-program-btn full-width-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
-                <Plus size={16} />
-                <span>새 편성 등록</span>
+        {isDesktop ? (
+          <>
+            {/* 1. Mode Toggle (Full Width) */}
+            <div className="controls-row-top">
+              <button 
+                className="mode-toggle-btn full-width-btn" 
+                onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
+                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+              >
+                <RefreshCw size={14} className="toggle-icon" />
+                <span>{mode === 'crawl' ? '공식 데이터 보기' : '사내 편성표 보기'}</span>
               </button>
             </div>
-          )}
-        </div>
+
+            <div className="panel-section time-date-section">
+              {/* 2. Date row with arrows */}
+              <div className="scroll-row-with-arrows">
+                <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
+                  <ChevronLeft />
+                </button>
+                <div className="date-scroll-wrapper" ref={dateScrollRef}>
+                  {uniqueDates.map(date => {
+                    const isActive = selectedDate === date;
+                    const dateObj = new Date(date);
+                    const dayNumber = dateObj.getDate();
+                    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+                    const weekdayName = weekdays[dateObj.getDay()];
+                    return (
+                      <button
+                        key={date}
+                        className={`date-card ${isActive ? 'active' : ''}`}
+                        onClick={() => handleDateClick(date)}
+                      >
+                        <span className="date-card-day-name">{weekdayName}</span>
+                        <span className="date-card-day-number">{dayNumber}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
+                  <ChevronRight />
+                </button>
+              </div>
+            {availablePrograms.length > 0 && (
+              <div className="scroll-row-with-arrows time-scroll-section">
+                <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, -100)}>
+                  <ChevronLeft />
+                </button>
+                <div className="time-seamless-track" ref={timeScrollRef}>
+                  {availablePrograms.map(p => {
+                    // Check if this program is liked
+                    const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
+                    const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
+                    const isActive = selectedPgmId === p.pgmId;
+                    return (
+                      <button
+                        key={p.pgmId}
+                        className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
+                        onClick={() => handleTimeClick(p.pgmId)}
+                      >
+                        {p.broadcast_time}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, 100)}>
+                  <ChevronRight />
+                </button>
+              </div>
+            )}
+            </div>
+
+            {/* 4. Options (Checkbox / Register) */}
+            <div className="options-row-bottom panel-section">
+              {mode === 'crawl' ? (
+                <label className="checkbox-label" htmlFor="all-times-checkbox">
+                  <input
+                    type="checkbox"
+                    id="all-times-checkbox"
+                    className="checkbox-input"
+                    checked={allTimes}
+                    onChange={(e) => setAllTimes(e.target.checked)}
+                  />
+                  모든시간 표시
+                </label>
+              ) : (
+                <div className="internal-actions-row">
+                  <button className="add-program-btn full-width-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
+                    <Plus size={16} />
+                    <span>새 편성 등록</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* MOBILE LAYOUT (Original compact layout) */}
+            <div className="date-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div className="date-scroll-wrapper" ref={dateScrollRef} style={{ flex: 1, marginRight: '0.5rem', marginBottom: 0 }}>
+                {uniqueDates.map(date => {
+                  const isActive = selectedDate === date;
+                  const dateObj = new Date(date);
+                  const dayNumber = dateObj.getDate();
+                  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+                  const weekdayName = weekdays[dateObj.getDay()];
+                  return (
+                    <button
+                      key={date}
+                      className={`date-card ${isActive ? 'active' : ''}`}
+                      onClick={() => handleDateClick(date)}
+                    >
+                      <span className="date-card-day-name">{weekdayName}</span>
+                      <span className="date-card-day-number">{dayNumber}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button 
+                className="mode-toggle-btn" 
+                onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
+                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+                style={{ padding: '0.6rem', flexShrink: 0, minWidth: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <RefreshCw size={18} />
+              </button>
+            </div>
+            
+            <div className="time-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="time-seamless-track" ref={timeScrollRef} style={{ flex: 1, marginRight: '0.5rem' }}>
+                {availablePrograms.map(p => {
+                  const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
+                  const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
+                  const isActive = selectedPgmId === p.pgmId;
+                  return (
+                    <button
+                      key={p.pgmId}
+                      className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
+                      onClick={() => handleTimeClick(p.pgmId)}
+                    >
+                      {p.broadcast_time}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <div className="header-options" style={{ flexShrink: 0 }}>
+                {mode === 'crawl' ? (
+                  <label className="checkbox-label" style={{ fontSize: '0.75rem', padding: 0 }}>
+                    <input type="checkbox" checked={allTimes} onChange={(e) => setAllTimes(e.target.checked)} className="checkbox-input" />
+                    모든시간
+                  </label>
+                ) : (
+                  <button className="add-program-btn" onClick={() => setShowAddModal(true)} style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px' }} title="새 편성 등록">
+                    <Plus size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Program broadcasting Name */}
