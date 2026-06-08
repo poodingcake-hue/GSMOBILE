@@ -354,7 +354,9 @@ function App() {
   const openStockPage = (product) => {
     if (product.isOurProduct) {
       setSelectedProduct(product);
-      window.history.pushState({ stockOpen: true, pgmId: selectedPgmId, date: selectedDate }, '', '#stock');
+      if (window.location.hash !== '#stock') {
+        window.history.pushState({ stockOpen: true, pgmId: selectedPgmId, date: selectedDate }, '', '#stock');
+      }
     }
   };
 
@@ -826,7 +828,7 @@ function App() {
 
   // Render 2D Inventory Matrix mapping for selectedProduct
   const matrixData = useMemo(() => {
-    if (!selectedProduct || rawData.length <= 1) return { sizes: [], colors: [], stockMap: {} };
+    if (!selectedProduct || !selectedProduct.prdid || rawData.length <= 1) return { sizes: [], colors: [], stockMap: {} };
     
     // Filter rows matching product ID
     const matches = rawData.slice(1).filter(row => row[rawColumnIndices.prdid] === selectedProduct.prdid);
