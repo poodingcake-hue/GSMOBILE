@@ -1107,14 +1107,14 @@ body {
   .sticky-header {
     position: fixed;
     top: 2rem;
-    right: max(1rem, calc(50vw - 652px));
-    left: auto;
-    width: 380px;
+    left: min(calc(100vw - 300px - 1rem), calc(50vw + 272px));
+    right: auto;
+    width: 300px;
     background: #ffffff;
     border-bottom: none;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    padding: 1.5rem;
+    padding: 1.2rem;
     align-items: stretch;
     display: flex;
     flex-direction: column;
@@ -1133,9 +1133,9 @@ body {
   }
 
   .full-width-btn {
-    padding: 0.8rem;
-    font-size: 0.95rem;
-    border-radius: 0.8rem;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 0.6rem;
   }
 
   .scroll-row-with-arrows {
@@ -1148,15 +1148,29 @@ body {
     flex-wrap: nowrap;
     margin: 0;
   }
+  
+  .date-card {
+    width: 2.6rem;
+    height: 3rem;
+    min-width: 2.6rem;
+  }
+  
+  .date-card-day-name {
+    font-size: 0.75rem;
+  }
+  
+  .date-card-day-number {
+    font-size: 1rem;
+  }
 
   .options-row-bottom {
     margin-bottom: 0.5rem;
     justify-content: flex-start;
-    padding-left: 1.8rem;
+    padding-left: 1.2rem;
   }
   
   .options-row-bottom .checkbox-label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .time-scroll-section {
@@ -1170,5 +1184,14 @@ body {
     padding: 0;
     -webkit-mask-image: none;
     mask-image: none;
+  }
+  
+  .time-seamless-item {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .time-seamless-item.active {
+    font-size: 0.85rem;
   }
 }
