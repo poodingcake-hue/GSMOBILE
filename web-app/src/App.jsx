@@ -1045,7 +1045,7 @@ function App() {
           onTouchEnd={handleStockTouchEnd}
         >
           <div className="stock-page-header">
-            <h3 className="stock-page-title">재고 수량 확인</h3>
+            <div className="stock-page-header-spacer"></div>
             <button className="stock-page-close-btn" onClick={closeStockPage}>
               <X size={24} />
             </button>
@@ -1074,15 +1074,17 @@ function App() {
             </div>
 
             <div className="stock-page-details">
-              <h4 className="stock-page-product-title">{selectedProduct.mappedName}</h4>
-              <div className="stock-page-meta">
+              <div className="stock-page-title-row">
+                <h4 className="stock-page-product-title">{selectedProduct.mappedName}</h4>
                 <span className="stock-page-code">{selectedProduct.prdid}</span>
-                {selectedProduct.location && (
+              </div>
+              {selectedProduct.location && (
+                <div className="stock-page-location-row">
                   <span className="stock-page-location">
                     {selectedProduct.location}
                   </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* 2D Stock Matrix table */}
