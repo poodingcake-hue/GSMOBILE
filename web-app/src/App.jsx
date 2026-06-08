@@ -3,7 +3,9 @@ import {
   X,
   Grid,
   RefreshCw,
-  Plus
+  Plus,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -187,10 +189,14 @@ function App() {
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
   
-
+  const dateScrollRef = useRef(null);
+  const timeScrollRef = useRef(null);
   
-
-  
+  const scrollContainer = (ref, offset) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: '08:00',
@@ -828,11 +834,27 @@ function App() {
 
   return (
     <div className="container">
-      {/* Sticky Header: Date row + Time seamless scroll */}
+      {/* Sticky Header: Right Control Panel on Desktop */}
       <div className="sticky-header">
-        {/* Date row + 모든시간 checkbox or mode toggle control */}
-        <div className="date-header-row">
-          <div className="date-scroll-wrapper">
+        
+        {/* 1. Mode Toggle (Full Width) */}
+        <div className="controls-row-top">
+          <button 
+            className="mode-toggle-btn full-width-btn" 
+            onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
+            title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+          >
+            <RefreshCw size={14} className="toggle-icon" />
+            <span>{mode === 'crawl' ? '공식 데이터 보기' : '사내 편성표 보기'}</span>
+          </button>
+        </div>
+
+        {/* 2. Date row with arrows */}
+        <div className="scroll-row-with-arrows">
+          <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
+            <ChevronLeft />
+          </button>
+          <div className="date-scroll-wrapper" ref={dateScrollRef}>
             {uniqueDates.map(date => {
               const isActive = selectedDate === date;
               const dateObj = new Date(date);
@@ -851,58 +873,60 @@ function App() {
               );
             })}
           </div>
-          <div className="date-header-controls">
-            <div className="controls-row">
-              <button 
-                className="mode-toggle-btn" 
-                onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
-                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
-              >
-                <RefreshCw size={14} className="toggle-icon" />
-                <span>{mode === 'crawl' ? '공식' : '사내'}</span>
-              </button>
-            </div>
-            
-            {mode === 'crawl' ? (
-              <label className="checkbox-label" htmlFor="all-times-checkbox">
-                <input
-                  type="checkbox"
-                  id="all-times-checkbox"
-                  className="checkbox-input"
-                  checked={allTimes}
-                  onChange={(e) => setAllTimes(e.target.checked)}
-                />
-                모든시간
-              </label>
-            ) : (
-              <div className="internal-actions-row">
-                <button className="add-program-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
-                  <Plus size={16} />
-                  <span>등록</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
+            <ChevronRight />
+          </button>
         </div>
 
-        {/* Seamless Time Scroll */}
+        {/* 3. Options (Checkbox / Register) */}
+        <div className="options-row-mid">
+          {mode === 'crawl' ? (
+            <label className="checkbox-label" htmlFor="all-times-checkbox">
+              <input
+                type="checkbox"
+                id="all-times-checkbox"
+                className="checkbox-input"
+                checked={allTimes}
+                onChange={(e) => setAllTimes(e.target.checked)}
+              />
+              모든시간 표시
+            </label>
+          ) : (
+            <div className="internal-actions-row">
+              <button className="add-program-btn full-width-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
+                <Plus size={16} />
+                <span>새 편성 등록</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 4. Seamless Time Scroll with arrows */}
         {availablePrograms.length > 0 && (
-          <div className="time-seamless-track" ref={timeScrollRef}>
-            {availablePrograms.map(p => {
-              // Check if this program is liked
-              const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
-              const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
-              const isActive = selectedPgmId === p.pgmId;
-              return (
-                <button
-                  key={p.pgmId}
-                  className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
-                  onClick={() => handleTimeClick(p.pgmId)}
-                >
-                  {p.broadcast_time}
-                </button>
-              );
-            })}
+          <div className="scroll-row-with-arrows time-scroll-section">
+            <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, -100)}>
+              <ChevronLeft />
+            </button>
+            <div className="time-seamless-track" ref={timeScrollRef}>
+              {availablePrograms.map(p => {
+                // Check if this program is liked
+                const prog = selectedDatePrograms.find(sp => sp.pgmId === p.pgmId);
+                const isLiked = prog ? likedPrograms.has(getLikeKey(prog)) : false;
+                const isActive = selectedPgmId === p.pgmId;
+                return (
+                  <button
+                    key={p.pgmId}
+                    className={`time-seamless-item ${isActive ? 'active' : ''} ${isLiked ? 'liked' : ''}`}
+                    onClick={() => handleTimeClick(p.pgmId)}
+                  >
+                    {p.broadcast_time}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, 100)}>
+              <ChevronRight />
+            </button>
           </div>
         )}
       </div>
