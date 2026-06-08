@@ -1015,8 +1015,8 @@ body {
 /* Desktop Stock Page Popup (Responsive) */
 @media (min-width: 900px) {
   #root {
-    margin: 0 auto;
-    transform: translateX(60px);
+    margin: 0;
+    margin-left: calc(50% - 180px);
   }
 
   .stock-page-container {
