@@ -1044,12 +1044,9 @@ function App() {
           onTouchStart={handleStockTouchStart}
           onTouchEnd={handleStockTouchEnd}
         >
-          <div className="stock-page-header">
-            <div className="stock-page-header-spacer"></div>
-            <button className="stock-page-close-btn" onClick={closeStockPage}>
-              <X size={24} />
-            </button>
-          </div>
+          <button className="stock-page-close-btn" onClick={closeStockPage}>
+            <X size={24} />
+          </button>
           
           <div className="stock-page-body">
             {/* Product Images (Continuous Scroll) */}
