@@ -1024,9 +1024,7 @@ body {
     top: 50%;
     left: 2rem;
     transform: translateY(-50%);
-    width: max-content;
-    min-width: 400px;
-    max-width: 600px;
+    width: 420px;
     height: auto;
     max-height: 95vh;
     bottom: auto;
