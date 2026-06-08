@@ -198,9 +198,13 @@ function App() {
     }
   };
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    time: '08:00',
-    textBlock: ''
+    date: '',
+    time: '',
+    pgmTitle: '',
+    location: '',
+    pd: '',
+    hosts: '',
+    productIds: ''
   });
   const [formStatus, setFormStatus] = useState({
     loading: false,
@@ -236,16 +240,20 @@ function App() {
     setFormStatus({ loading: true, success: false, message: '' });
     
     try {
-      const lines = formData.textBlock.trim().split('\n').map(line => line.trim());
-      if (lines.length < 4) {
-        throw new Error('사내 데이터 규격이 맞지 않습니다. 최소 4행(방송명, 스튜디오, PD, 호스트) 이상이어야 합니다.');
+      if (!formData.date || !formData.time || !formData.pgmTitle) {
+        throw new Error('필수 항목(방송일, 방송시간, 방송명)을 입력해주세요.');
       }
       
-      const pgmTitle = lines[0];
-      const location = lines[1];
-      const pd = lines[2].replace(/^\[|\]$/g, '');
-      const hosts = lines[3].replace(/^\[|\]$/g, '');
-      const productIds = lines.slice(4).filter(line => /^\d+$/.test(line));
+      const pgmTitle = formData.pgmTitle.trim();
+      const location = formData.location.trim();
+      const pd = formData.pd.replace(/^\[|\]$/g, '').trim();
+      const hosts = formData.hosts.replace(/^\[|\]$/g, '').trim();
+      
+      // 상품코드는 엔터나 쉼표로 구분하여 처리
+      const productIds = formData.productIds
+        .split(/[\n,]/)
+        .map(id => id.trim())
+        .filter(id => /^\d+$/.test(id));
       
       const date_str = formData.date.replace(/-/g, '');
       const pgmId = `internal_${Date.now()}`;
@@ -293,8 +301,16 @@ function App() {
       // Update local state instantly
       setInternalData(prev => [...prev, ...newProducts]);
       
-      // Reset textBlock form
-      setFormData(prev => ({ ...prev, textBlock: '' }));
+      // Reset form
+      setFormData({
+        date: '',
+        time: '',
+        pgmTitle: '',
+        location: '',
+        pd: '',
+        hosts: '',
+        productIds: ''
+      });
       
       // Auto-select the newly added program
       setSelectedDate(formData.date);
@@ -1185,14 +1201,57 @@ function App() {
               </div>
               
               <div className="form-group">
-                <label className="form-label">사내 데이터 입력란 (엑셀 셀 붙여넣기)</label>
+                <label className="form-label">방송명 (필수)</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  required 
+                  placeholder="예: [멀티A]코어"
+                  value={formData.pgmTitle} 
+                  onChange={e => setFormData(prev => ({ ...prev, pgmTitle: e.target.value }))}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">스튜디오 / 장소</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="예: M3"
+                  value={formData.location} 
+                  onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">PD</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="예: 김경언"
+                  value={formData.pd} 
+                  onChange={e => setFormData(prev => ({ ...prev, pd: e.target.value }))}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">호스트</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="예: 임민수,최세인"
+                  value={formData.hosts} 
+                  onChange={e => setFormData(prev => ({ ...prev, hosts: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">상품코드 (엔터 또는 쉼표로 구분)</label>
                 <textarea 
                   className="form-textarea"
-                  required 
-                  placeholder="예시:&#10;[멀티A]코어&#10;M3&#10;[김경언]&#10;[임민수,최세인]&#10;1103683581&#10;1103681696"
-                  value={formData.textBlock}
-                  onChange={e => setFormData(prev => ({ ...prev, textBlock: e.target.value }))}
-                  rows={8}
+                  value={formData.productIds}
+                  onChange={e => setFormData(prev => ({ ...prev, productIds: e.target.value }))}
+                  rows={4}
                 />
               </div>
               
