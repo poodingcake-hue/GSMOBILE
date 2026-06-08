@@ -834,6 +834,27 @@ function App() {
     return mappedManualProducts;
   }, [activeProgram, rawData, imageData, liveData, rawColumnIndices, imageColumnIndices, liveColumnIndices, ourProductIds, mode, mliveData, selectedDate]);
 
+  const excludedItems = useMemo(() => activeProducts.filter(p => p.comparisonStatus === 'excluded'), [activeProducts]);
+  const addedItems = useMemo(() => activeProducts.filter(p => p.comparisonStatus === 'added'), [activeProducts]);
+
+  const handleDateArrow = (direction) => {
+    const currentIndex = uniqueDates.indexOf(selectedDate);
+    if (currentIndex === -1) return;
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < uniqueDates.length) {
+      handleDateClick(uniqueDates[newIndex]);
+    }
+  };
+
+  const handleTimeArrow = (direction) => {
+    const currentIndex = availablePrograms.findIndex(p => p.pgmId === selectedPgmId);
+    if (currentIndex === -1) return;
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < availablePrograms.length) {
+      handleTimeClick(availablePrograms[newIndex].pgmId);
+    }
+  };
+
   // Render 2D Inventory Matrix mapping for selectedProduct
   const matrixData = useMemo(() => {
     if (!selectedProduct || !selectedProduct.prdid || rawData.length <= 1) return { sizes: [], colors: [], stockMap: {} };
@@ -875,7 +896,7 @@ function App() {
             <div className="panel-section time-date-section">
               {/* 2. Date row with arrows */}
               <div className="scroll-row-with-arrows">
-                <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
+                <button className="scroll-arrow-btn" onClick={() => handleDateArrow(-1)}>
                   <ChevronLeft />
                 </button>
                 <div className="date-scroll-wrapper" ref={dateScrollRef}>
@@ -897,13 +918,13 @@ function App() {
                     );
                   })}
                 </div>
-                <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
+                <button className="scroll-arrow-btn" onClick={() => handleDateArrow(1)}>
                   <ChevronRight />
                 </button>
               </div>
             {availablePrograms.length > 0 && (
               <div className="scroll-row-with-arrows time-scroll-section">
-                <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, -100)}>
+                <button className="scroll-arrow-btn" onClick={() => handleTimeArrow(-1)}>
                   <ChevronLeft />
                 </button>
                 <div className="time-seamless-track" ref={timeScrollRef}>
@@ -923,7 +944,7 @@ function App() {
                     );
                   })}
                 </div>
-                <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, 100)}>
+                <button className="scroll-arrow-btn" onClick={() => handleTimeArrow(1)}>
                   <ChevronRight />
                 </button>
               </div>
@@ -952,6 +973,28 @@ function App() {
                 </div>
               )}
             </div>
+
+            {/* 5. Difference summary box */}
+            {mode === 'internal' && (excludedItems.length > 0 || addedItems.length > 0) && (
+              <div className="diff-summary-box panel-section" style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                {excludedItems.length > 0 && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, border: '1px solid rgba(239,68,68,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px', display: 'inline-block', marginBottom: '0.3rem' }}>공식 웹 제외</span>
+                    <ul style={{ listStyleType: 'none', margin: 0, padding: 0, fontSize: '0.75rem', color: '#475569' }}>
+                      {excludedItems.map(p => <li key={p.prdid} style={{ marginBottom: '0.2rem' }}>• {p.mappedName || p.prdid}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {addedItems.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: '0.65rem', color: '#3b82f6', fontWeight: 600, border: '1px solid rgba(59,130,246,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px', display: 'inline-block', marginBottom: '0.3rem' }}>공식 웹 추가</span>
+                    <ul style={{ listStyleType: 'none', margin: 0, padding: 0, fontSize: '0.75rem', color: '#475569' }}>
+                      {addedItems.map(p => <li key={p.prdid} style={{ marginBottom: '0.2rem' }}>• {p.mappedName || p.prdid}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <>

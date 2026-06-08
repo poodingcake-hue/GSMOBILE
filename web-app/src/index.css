@@ -147,8 +147,8 @@ body {
 }
 
 .date-card.active {
-  background: var(--accent-primary);
-  color: #ffffff;
+  background: transparent;
+  color: var(--accent-primary);
   border-radius: 0.6rem;
 }
 
@@ -221,8 +221,8 @@ body {
 }
 
 .time-seamless-item.active {
-  background: var(--accent-primary);
-  color: #ffffff;
+  background: transparent;
+  color: var(--accent-primary);
   font-weight: 800;
   font-size: 0.95rem;
 }
