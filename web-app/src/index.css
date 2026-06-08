@@ -1012,11 +1012,12 @@ body {
   white-space: nowrap;
 }
 
-/* Desktop Stock Page Popup (Responsive) */
+/* Desktop Layout (Responsive) */
 @media (min-width: 900px) {
   #root {
     margin: 0;
     margin-left: calc(50% - 180px);
+    padding-top: 2rem;
   }
 
   .stock-page-container {
@@ -1042,5 +1043,51 @@ body {
 
   .stock-page-header {
     border-radius: 12px 12px 0 0;
+  }
+
+  /* Move header controls to the right */
+  .sticky-header {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    left: calc(50% + 320px);
+    width: 280px;
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .date-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .date-scroll-wrapper {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    overflow: visible;
+  }
+
+  .time-seamless-track {
+    flex-wrap: wrap;
+    -webkit-mask-image: none;
+    mask-image: none;
+    padding: 0;
+    gap: 0.5rem;
+    overflow: visible;
+  }
+
+  .time-seamless-item {
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .date-header-controls {
+    margin-top: 0.5rem;
   }
 }
