@@ -1047,10 +1047,14 @@ body {
   justify-content: center;
 }
 
-.options-row-mid {
+.options-row-bottom {
   display: flex;
   justify-content: flex-end;
   margin: 0.5rem 0;
+  width: 100%;
+}
+
+.time-date-section {
   width: 100%;
 }
 
@@ -1061,15 +1065,14 @@ body {
 /* Desktop Layout (Responsive) */
 @media (min-width: 900px) {
   #root {
-    margin: 0;
-    margin-left: 430px;
+    margin: 0 auto;
     padding-top: 2rem;
   }
 
   .stock-page-container {
     position: fixed;
     top: 50%;
-    left: 1rem;
+    left: max(1rem, calc(50vw - 652px));
     transform: translateY(-50%);
     width: 380px;
     height: auto;
@@ -1104,7 +1107,8 @@ body {
   .sticky-header {
     position: fixed;
     top: 2rem;
-    left: calc(430px + 480px + 2rem);
+    right: max(1rem, calc(50vw - 652px));
+    left: auto;
     width: 380px;
     background: #ffffff;
     border-bottom: none;
@@ -1117,7 +1121,15 @@ body {
   }
 
   .controls-row-top {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .time-date-section {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
   }
 
   .full-width-btn {
@@ -1137,13 +1149,13 @@ body {
     margin: 0;
   }
 
-  .options-row-mid {
-    margin-bottom: 1.5rem;
+  .options-row-bottom {
+    margin-bottom: 0.5rem;
     justify-content: flex-start;
     padding-left: 1.8rem;
   }
   
-  .options-row-mid .checkbox-label {
+  .options-row-bottom .checkbox-label {
     font-size: 0.85rem;
   }
 

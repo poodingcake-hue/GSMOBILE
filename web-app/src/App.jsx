@@ -849,59 +849,35 @@ function App() {
           </button>
         </div>
 
-        {/* 2. Date row with arrows */}
-        <div className="scroll-row-with-arrows">
-          <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
-            <ChevronLeft />
-          </button>
-          <div className="date-scroll-wrapper" ref={dateScrollRef}>
-            {uniqueDates.map(date => {
-              const isActive = selectedDate === date;
-              const dateObj = new Date(date);
-              const dayNumber = dateObj.getDate();
-              const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-              const weekdayName = weekdays[dateObj.getDay()];
-              return (
-                <button
-                  key={date}
-                  className={`date-card ${isActive ? 'active' : ''}`}
-                  onClick={() => handleDateClick(date)}
-                >
-                  <span className="date-card-day-name">{weekdayName}</span>
-                  <span className="date-card-day-number">{dayNumber}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
-            <ChevronRight />
-          </button>
-        </div>
-
-        {/* 3. Options (Checkbox / Register) */}
-        <div className="options-row-mid">
-          {mode === 'crawl' ? (
-            <label className="checkbox-label" htmlFor="all-times-checkbox">
-              <input
-                type="checkbox"
-                id="all-times-checkbox"
-                className="checkbox-input"
-                checked={allTimes}
-                onChange={(e) => setAllTimes(e.target.checked)}
-              />
-              모든시간 표시
-            </label>
-          ) : (
-            <div className="internal-actions-row">
-              <button className="add-program-btn full-width-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
-                <Plus size={16} />
-                <span>새 편성 등록</span>
-              </button>
+        <div className="panel-section time-date-section">
+          {/* 2. Date row with arrows */}
+          <div className="scroll-row-with-arrows">
+            <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, -100)}>
+              <ChevronLeft />
+            </button>
+            <div className="date-scroll-wrapper" ref={dateScrollRef}>
+              {uniqueDates.map(date => {
+                const isActive = selectedDate === date;
+                const dateObj = new Date(date);
+                const dayNumber = dateObj.getDate();
+                const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+                const weekdayName = weekdays[dateObj.getDay()];
+                return (
+                  <button
+                    key={date}
+                    className={`date-card ${isActive ? 'active' : ''}`}
+                    onClick={() => handleDateClick(date)}
+                  >
+                    <span className="date-card-day-name">{weekdayName}</span>
+                    <span className="date-card-day-number">{dayNumber}</span>
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </div>
-
-        {/* 4. Seamless Time Scroll with arrows */}
+            <button className="scroll-arrow-btn" onClick={() => scrollContainer(dateScrollRef, 100)}>
+              <ChevronRight />
+            </button>
+          </div>
         {availablePrograms.length > 0 && (
           <div className="scroll-row-with-arrows time-scroll-section">
             <button className="scroll-arrow-btn" onClick={() => scrollContainer(timeScrollRef, -100)}>
@@ -929,6 +905,30 @@ function App() {
             </button>
           </div>
         )}
+        </div>
+
+        {/* 4. Options (Checkbox / Register) */}
+        <div className="options-row-bottom panel-section">
+          {mode === 'crawl' ? (
+            <label className="checkbox-label" htmlFor="all-times-checkbox">
+              <input
+                type="checkbox"
+                id="all-times-checkbox"
+                className="checkbox-input"
+                checked={allTimes}
+                onChange={(e) => setAllTimes(e.target.checked)}
+              />
+              모든시간 표시
+            </label>
+          ) : (
+            <div className="internal-actions-row">
+              <button className="add-program-btn full-width-btn" onClick={() => setShowAddModal(true)} title="사내 편성 추가">
+                <Plus size={16} />
+                <span>새 편성 등록</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Program broadcasting Name */}
