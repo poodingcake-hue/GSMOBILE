@@ -1009,3 +1009,31 @@ body {
   border-radius: 0.3rem;
   white-space: nowrap;
 }
+
+/* Desktop Stock Page Popup (Responsive) */
+@media (min-width: 900px) {
+  .stock-page-container {
+    position: fixed;
+    top: 50%;
+    left: max(2rem, calc(50% - 240px - 400px - 2rem));
+    transform: translateY(-50%);
+    width: 400px;
+    height: 80vh;
+    max-height: 800px;
+    bottom: auto;
+    right: auto;
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 1px var(--border-color);
+    animation: popupFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes popupFadeIn {
+    from { transform: translateY(-50%) scale(0.95); opacity: 0; }
+    to { transform: translateY(-50%) scale(1); opacity: 1; }
+  }
+
+  .stock-page-header {
+    border-radius: 12px 12px 0 0;
+  }
+}
