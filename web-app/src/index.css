@@ -380,6 +380,21 @@ body {
   line-height: 1;
 }
 
+/* 모바일 전용 미디어 쿼리: 3열 격자 구조에서 배지가 이미지를 가리거나 잘리지 않도록 강제 크기 지정 */
+@media (max-width: 480px) {
+  .overlay-date-badge {
+    font-size: 8.5px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    font-weight: 700 !important;
+  }
+  .overlays-container {
+    bottom: 4px !important;
+    right: 4px !important;
+    gap: 3px !important;
+  }
+}
+
 /* Dynamic colors based on total dates count */
 .overlay-date-badge.badge-pink {
   background-color: var(--accent-pink);
