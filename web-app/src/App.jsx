@@ -199,7 +199,8 @@ function App() {
   };
   const [formData, setFormData] = useState({
     date: '',
-    time: '',
+    hour: '',
+    minute: '00',
     textBlock: ''
   });
   const [formStatus, setFormStatus] = useState({
@@ -236,9 +237,11 @@ function App() {
     setFormStatus({ loading: true, success: false, message: '' });
     
     try {
-      if (!formData.date || !formData.time || !formData.textBlock) {
+      if (!formData.date || !formData.hour || !formData.textBlock) {
         throw new Error('필수 항목(방송일, 방송시간, 데이터 입력란)을 입력해주세요.');
       }
+      
+      const broadcast_time = `${formData.hour.padStart(2, '0')}:${formData.minute.padStart(2, '0')}`;
       
       const lines = formData.textBlock.trim().split('\n').map(line => line.trim());
       if (lines.length < 4) {
@@ -257,7 +260,7 @@ function App() {
       const newProducts = (productIds.length > 0 ? productIds : ['']).map(prdid => ({
         date: formData.date,
         date_str,
-        broadcast_time: formData.time,
+        broadcast_time,
         pgmId,
         pgmTitle,
         location,
@@ -274,7 +277,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date: formData.date,
-          broadcast_time: formData.time,
+          broadcast_time,
           pgmTitle,
           location,
           pd,
@@ -300,7 +303,8 @@ function App() {
       // Reset form
       setFormData({
         date: '',
-        time: '',
+        hour: '',
+        minute: '00',
         textBlock: ''
       });
       
@@ -1183,13 +1187,31 @@ function App() {
               
               <div className="form-group">
                 <label className="form-label">방송시간 선택</label>
-                <input 
-                  type="time" 
-                  className="form-input"
-                  required 
-                  value={formData.time} 
-                  onChange={e => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input 
+                    type="number" 
+                    className="form-input"
+                    style={{ width: '5rem', textAlign: 'center' }}
+                    placeholder="시"
+                    min="0"
+                    max="23"
+                    required 
+                    value={formData.hour} 
+                    onChange={e => setFormData(prev => ({ ...prev, hour: e.target.value }))}
+                  />
+                  <span style={{ fontWeight: 'bold' }}>:</span>
+                  <input 
+                    type="number" 
+                    className="form-input"
+                    style={{ width: '5rem', textAlign: 'center' }}
+                    placeholder="분"
+                    min="0"
+                    max="59"
+                    required 
+                    value={formData.minute} 
+                    onChange={e => setFormData(prev => ({ ...prev, minute: e.target.value }))}
+                  />
+                </div>
               </div>
               
               <div className="form-group">
