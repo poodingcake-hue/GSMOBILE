@@ -371,9 +371,9 @@ body {
   align-items: center;
   justify-content: center;
   width: auto; /* 글자 길이에 맞춰 유동적으로 조절 */
-  height: 20cqw;
-  font-size: 7.5cqw;
-  padding: 0 4cqw; /* 좌우 여백을 주어 글자가 잘리지 않도록 함 */
+  font-size: clamp(9px, 7.5cqw, 12px); /* 모바일 최소 9px, 데스크톱 최대 12px 유지 */
+  height: 2.2em; /* 폰트 크기에 비례하도록 설정하여 상하 여백 확보 */
+  padding: 0 0.8em; /* 폰트 크기에 비례하도록 설정하여 좌우 여백 확보 */
   border-radius: 9999px;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
