@@ -648,7 +648,7 @@ function App() {
   }, [selectedDatePrograms]);
 
   // Automatically select the first available program when selectedDate or allTimes changes
-  const timeScrollRef = useRef(null);
+  // removed duplicate timeScrollRef
 
   useEffect(() => {
     if (availablePrograms.length > 0) {
