@@ -738,7 +738,8 @@ function App() {
         imageUrl = `https://asset.m-gs.kr/prod/${prdid}/1/550`;
       }
       
-      // 3. Mapped live dates (format to DD/HH:MM)
+      // 3. Mapped live dates (format to DD/HH:MM) — only future broadcasts
+      const now = new Date();
       const liveTimes = [];
       if (liveData.length > 1) {
         liveData.slice(1).forEach(row => {
@@ -747,9 +748,19 @@ function App() {
           const cleanPrdId = rawPrdId.replace(/,/g, '').split('.')[0];
           
           if (cleanPrdId === prdid) {
-            const rawDate = row[liveColumnIndices.date];
+            const rawDate = row[liveColumnIndices.date]; // "YYYY-MM-DD HH:MM"
             if (rawDate) {
-              liveTimes.push(formatLiveDate(rawDate));
+              // Parse without timezone shift
+              const parts = rawDate.trim().split(' ');
+              if (parts.length >= 2) {
+                const [y, mo, d] = parts[0].split('-').map(Number);
+                const [h, m] = parts[1].split(':').map(Number);
+                const broadcastTime = new Date(y, mo - 1, d, h, m);
+                // Only show if broadcast time is in the future (same minute or later)
+                if (broadcastTime >= now) {
+                  liveTimes.push(formatLiveDate(rawDate));
+                }
+              }
             }
           }
         });
