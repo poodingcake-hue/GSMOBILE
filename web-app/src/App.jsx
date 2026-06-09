@@ -886,10 +886,10 @@ function App() {
               <button 
                 className="mode-toggle-btn full-width-btn" 
                 onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
-                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+                title={mode === 'crawl' ? '세일즈온 등록정보로 전환' : 'GS SHOP 보기로 전환'}
               >
                 <RefreshCw size={14} className="toggle-icon" />
-                <span>{mode === 'crawl' ? '공식 데이터 보기' : '사내 편성표 보기'}</span>
+                <span>{mode === 'crawl' ? 'GS SHOP 보기' : '세일즈온 등록정보'}</span>
               </button>
             </div>
 
@@ -1022,7 +1022,7 @@ function App() {
               <button 
                 className="mode-toggle-btn" 
                 onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
-                title={mode === 'crawl' ? '사내 편성표로 전환' : '공식 편성표로 전환'}
+                title={mode === 'crawl' ? '세일즈온 등록정보로 전환' : 'GS SHOP 보기로 전환'}
                 style={{ padding: '0.6rem', flexShrink: 0, minWidth: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <RefreshCw size={18} />
