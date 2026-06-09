@@ -855,6 +855,41 @@ function App() {
     }
   };
 
+  // Global keyboard shortcut: Tab = next time, Shift+Tab = prev time
+  // When at boundary of time list, Tab/Shift+Tab wraps to next/prev date
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only activate on desktop and when no input/textarea/select is focused
+      if (!isDesktop) return;
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      // Ignore if a modal is open
+      if (showAddModal) return;
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const direction = e.shiftKey ? -1 : 1;
+        const currentTimeIndex = availablePrograms.findIndex(p => p.pgmId === selectedPgmId);
+        const nextTimeIndex = currentTimeIndex + direction;
+
+        if (nextTimeIndex >= 0 && nextTimeIndex < availablePrograms.length) {
+          // Move to next/prev time within same day
+          handleTimeClick(availablePrograms[nextTimeIndex].pgmId);
+        } else {
+          // At the boundary → move to next/prev date
+          const currentDateIndex = uniqueDates.indexOf(selectedDate);
+          const nextDateIndex = currentDateIndex + direction;
+          if (nextDateIndex >= 0 && nextDateIndex < uniqueDates.length) {
+            handleDateClick(uniqueDates[nextDateIndex]);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDesktop, showAddModal, availablePrograms, selectedPgmId, uniqueDates, selectedDate]);
+
   // Render 2D Inventory Matrix mapping for selectedProduct
   const matrixData = useMemo(() => {
     if (!selectedProduct || !selectedProduct.prdid || rawData.length <= 1) return { sizes: [], colors: [], stockMap: {} };
