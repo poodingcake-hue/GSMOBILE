@@ -1069,7 +1069,7 @@ body {
 @media (min-width: 900px) {
   #root {
     margin: 0 auto;
-    padding-top: 2rem;
+    padding-top: 0.5rem;
   }
 
   .stock-page-container {
