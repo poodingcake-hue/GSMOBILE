@@ -611,21 +611,25 @@ function App() {
   const selectedDatePrograms = useMemo(() => {
     if (!selectedDate) return [];
     
-    // Get current date (YYYY-MM-DD) and current hour
+    // KST-aware current datetime
     const now = new Date();
-    const tzOffset = now.getTimezoneOffset() * 60000;
-    const todayDateStr = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
-    const currentHour = now.getHours();
+    // Get KST date string: Korea is UTC+9
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const todayDateStr = kstNow.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const kstHour = kstNow.getUTCHours();
+    const kstMin = kstNow.getUTCMinutes();
+    const nowMinutes = kstHour * 60 + kstMin; // minutes from midnight KST
 
     const progMap = {};
     const activeDataset = mode === 'internal' ? internalData : mliveData;
     activeDataset.forEach(item => {
       if (item.date !== selectedDate) return;
       
-      // Filter out past hours if today
+      // Strictly filter out past programs on today
       if (selectedDate === todayDateStr) {
-        const bHour = parseInt(item.broadcast_time.split(':')[0], 10);
-        if (bHour < currentHour - 1) return;
+        const [bH, bM] = item.broadcast_time.split(':').map(Number);
+        const broadcastMinutes = bH * 60 + (bM || 0);
+        if (broadcastMinutes < nowMinutes) return;
       }
 
       const key = `${item.broadcast_time}_${item.pgmId}`;
@@ -656,10 +660,15 @@ function App() {
     }
   }, [mliveData, internalData, mode, selectedDate, allTimes, ourProductIds]);
 
-  // Extract unique dates for tab rendering
+  // Extract unique dates for tab rendering — only today and future
   const uniqueDates = useMemo(() => {
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const todayDateStr = kstNow.toISOString().split('T')[0];
     const activeDataset = mode === 'internal' ? internalData : mliveData;
-    return [...new Set(activeDataset.map(p => p.date))].sort();
+    return [...new Set(activeDataset.map(p => p.date))]
+      .filter(d => d >= todayDateStr)
+      .sort();
   }, [mliveData, internalData, mode]);
 
   // Extract available programs for selected date
@@ -739,8 +748,9 @@ function App() {
         imageUrl = `https://asset.m-gs.kr/prod/${prdid}/1/550`;
       }
       
-      // 3. Mapped live dates (format to DD/HH:MM) — only future broadcasts
-      const now = new Date();
+      // 3. Mapped live dates (format to DD/HH:MM) — only future broadcasts (KST-aware)
+      // rawDate is in KST ("YYYY-MM-DD HH:MM"), convert to UTC ms for comparison
+      const nowUtcMs = Date.now();
       const liveTimes = [];
       if (liveData.length > 1) {
         liveData.slice(1).forEach(row => {
@@ -749,16 +759,15 @@ function App() {
           const cleanPrdId = rawPrdId.replace(/,/g, '').split('.')[0];
           
           if (cleanPrdId === prdid) {
-            const rawDate = row[liveColumnIndices.date]; // "YYYY-MM-DD HH:MM"
+            const rawDate = row[liveColumnIndices.date]; // "YYYY-MM-DD HH:MM" in KST
             if (rawDate) {
-              // Parse without timezone shift
               const parts = rawDate.trim().split(' ');
               if (parts.length >= 2) {
                 const [y, mo, d] = parts[0].split('-').map(Number);
                 const [h, m] = parts[1].split(':').map(Number);
-                const broadcastTime = new Date(y, mo - 1, d, h, m);
-                // Only show if broadcast time is in the future (same minute or later)
-                if (broadcastTime >= now) {
+                // Convert KST to UTC: subtract 9 hours
+                const broadcastUtcMs = Date.UTC(y, mo - 1, d, h - 9, m);
+                if (broadcastUtcMs >= nowUtcMs) {
                   liveTimes.push(formatLiveDate(rawDate));
                 }
               }
@@ -766,6 +775,7 @@ function App() {
           }
         });
       }
+
       
       return {
         ...p,
