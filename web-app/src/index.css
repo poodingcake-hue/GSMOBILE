@@ -1198,3 +1198,11 @@ body {
     font-size: 0.85rem;
   }
 }
+
+/* Date input empty state: hide native text only */
+input[type="date"].date-empty::-webkit-datetime-edit {
+  color: transparent;
+}
+input[type="date"].date-empty::-webkit-datetime-edit-fields-wrapper {
+  color: transparent;
+}

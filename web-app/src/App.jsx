@@ -188,6 +188,7 @@ function App() {
   const [allTimes, setAllTimes] = useState(false);
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showHourPicker, setShowHourPicker] = useState(false);
   
   const dateScrollRef = useRef(null);
   const timeScrollRef = useRef(null);
@@ -1331,11 +1332,11 @@ function App() {
       )}
 
       {showAddModal && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowHourPicker(false); }}>
           <div className="modal-content">
             <div className="modal-header">
               <h3 className="modal-title">사내 편성 정보 등록</h3>
-              <button className="modal-close-btn" onClick={() => setShowAddModal(false)}>
+              <button className="modal-close-btn" onClick={() => { setShowAddModal(false); setShowHourPicker(false); }}>
                 <X size={20} />
               </button>
             </div>
@@ -1345,7 +1346,7 @@ function App() {
                 <label className="form-label">방송일 선택</label>
                 <input 
                   type="date" 
-                  className="form-input"
+                  className={`form-input${formData.date ? '' : ' date-empty'}`}
                   required 
                   value={formData.date} 
                   onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
@@ -1354,18 +1355,56 @@ function App() {
               
               <div className="form-group">
                 <label className="form-label">방송시간 선택</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input 
-                    type="number" 
-                    className="form-input"
-                    style={{ width: '5rem', textAlign: 'center' }}
-                    placeholder="시"
-                    min="0"
-                    max="23"
-                    required 
-                    value={formData.hour} 
-                    onChange={e => setFormData(prev => ({ ...prev, hour: e.target.value }))}
-                  />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
+                  {/* Hour picker trigger */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      className="form-input"
+                      style={{ width: '5rem', textAlign: 'center', cursor: 'pointer', background: '#fff', border: '1px solid #d1d5db', borderRadius: '0.5rem', padding: '0.5rem', fontWeight: 600, fontSize: '1rem', color: formData.hour ? '#1e293b' : '#9ca3af' }}
+                      onClick={() => setShowHourPicker(p => !p)}
+                    >
+                      {formData.hour !== '' ? formData.hour : '시'}
+                    </button>
+                    {showHourPicker && (
+                      <>
+                        {/* backdrop */}
+                        <div
+                          style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                          onClick={() => setShowHourPicker(false)}
+                        />
+                        <div style={{
+                          position: 'absolute', top: '110%', left: 0,
+                          background: '#fff', border: '1px solid #e2e8f0',
+                          borderRadius: '0.75rem', boxShadow: '0 8px 24px rgba(0,0,0,0.13)',
+                          zIndex: 9999, padding: '0.5rem', width: '210px'
+                      }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+                          {Array.from({ length: 19 }, (_, i) => i + 6).map(h => (
+                            <button
+                              key={h}
+                              type="button"
+                              onClick={() => { setFormData(prev => ({ ...prev, hour: String(h) })); setShowHourPicker(false); }}
+                              style={{
+                                padding: '0.35rem 0',
+                                borderRadius: '0.4rem',
+                                border: 'none',
+                                background: formData.hour === String(h) ? 'var(--accent-primary)' : '#f1f5f9',
+                                color: formData.hour === String(h) ? '#fff' : '#1e293b',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              {h}
+                            </button>
+                          ))}
+                        </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                   <span style={{ fontWeight: 'bold' }}>:</span>
                   <input 
                     type="number" 
@@ -1400,7 +1439,7 @@ function App() {
               )}
               
               <div className="form-actions">
-                <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>
+                <button type="button" className="btn-cancel" onClick={() => { setShowAddModal(false); setShowHourPicker(false); }}>
                   취소
                 </button>
                 <button type="submit" className="btn-submit" disabled={formStatus.loading}>
