@@ -259,7 +259,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: min(2.5vh, 20px) 0.75rem min(2.5vh, 20px) 0.75rem;
+  padding: min(2vh, 16px) 0.75rem min(2vh, 16px) 0.75rem;
   background: linear-gradient(to right, #DBEAFE, #ffffff);
   border-radius: 0.75rem;
   margin: 0 0.5rem 0.75rem 0.5rem;
@@ -293,7 +293,7 @@ body {
 /* Vertical divider */
 .broadcast-divider {
   width: 1.5px;
-  height: 2.2rem;
+  height: 2rem;
   background: #bfdbfe;
   flex-shrink: 0;
   margin-right: 0.85rem;
