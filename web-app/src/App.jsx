@@ -112,7 +112,7 @@ const FlowerIcon = () => (
     alt="Live GIF"
     style={{ 
       display: 'inline-block', 
-      height: '1.15em', /* Matches the font height perfectly */
+      height: '2.3em', /* Doubled the size as requested */
       verticalAlign: '-2px', /* Adjusts baseline alignment slightly */
       margin: '0 0.45rem', 
       flexShrink: 0,
