@@ -167,7 +167,10 @@ function cleanProgramTitle(title, mode) {
     }
   });
   
-  return [...brackets, ...foundKeywords].join(' ');
+  // Strip surrounding square brackets from bracket tokens before display
+  const cleanBrackets = brackets.map(b => b.replace(/^\[|\]$/g, ''));
+  return [...cleanBrackets, ...foundKeywords].join(' ');
+
 }
 
 function App() {
