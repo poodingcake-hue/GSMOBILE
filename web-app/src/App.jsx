@@ -108,7 +108,7 @@ function formatHeaderDate(dateStr) {
 
 const FlowerIcon = () => (
   <img 
-    src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWQ5N3NsbnRtOTd5MDE3Z2x1enVuMm90OTZ5amRqMHc3YnUybzRjbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/iiEo6XvWx7tdWRPxVw/giphy.gif"
+    src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGs3YWYzaWo0bmd5NncxeHJieGppNjF1ZW5pZWw2b2dub3lpNTlodSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/ZLg3UCRQDJUo6GtpqI/giphy.gif"
     alt="Live GIF"
     style={{ 
       display: 'inline-block', 
