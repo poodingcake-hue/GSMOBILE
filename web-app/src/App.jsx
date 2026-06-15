@@ -125,52 +125,57 @@ const FlowerIcon = () => (
 );
 
 // Clean program title based on brand brackets and keyword rules
-function cleanProgramTitle(title, mode) {
+function cleanProgramTitle(title, mode, isDesktop = true) {
   if (!title) return '모바일 라이브';
   
+  let resultStr = title;
+  
   // Apply brackets extraction only to crawled data. Manual (internal) is returned as is.
-  if (mode === 'internal') {
-    return title;
-  }
-  
-  const bracketRegex = /\[([^\]]+)\]/g;
-  const brackets = [];
-  let match;
-  
-  while ((match = bracketRegex.exec(title)) !== null) {
-    brackets.push(match[0]);
-  }
-  
-  if (brackets.length === 0) {
-    return title;
-  }
-  
-  const remainingText = title.replace(/\[[^\]]+\]/g, ' ');
-  
-  const keywords = [
-    'SJ', '라삐아프', '제이슨우', '아뜰리에', '브리엘', 
-    '모르간', '분트로이', '김서룡', '르네크루', '스케쳐스', 
-    'FILA', '지프', '스튜디오디페', '쏘내추럴', '코어'
-  ];
-  
-  const foundKeywords = [];
-  keywords.forEach(keyword => {
-    const regex = new RegExp(keyword, 'i');
-    if (regex.test(remainingText)) {
-      const badge = keyword; // Excluded keywords are output without brackets.
-      
-      const isDuplicate = brackets.some(b => b.toLowerCase().includes(badge.toLowerCase())) || 
-                          foundKeywords.some(fk => fk.toLowerCase() === badge.toLowerCase());
-      if (!isDuplicate) {
-        foundKeywords.push(badge);
-      }
+  if (mode !== 'internal') {
+    const bracketRegex = /\[([^\]]+)\]/g;
+    const brackets = [];
+    let match;
+    
+    while ((match = bracketRegex.exec(title)) !== null) {
+      brackets.push(match[0]);
     }
-  });
-  
-  // Strip surrounding square brackets from bracket tokens before display
-  const cleanBrackets = brackets.map(b => b.replace(/^\[|\]$/g, ''));
-  return [...cleanBrackets, ...foundKeywords].join(' ');
+    
+    if (brackets.length > 0) {
+      const remainingText = title.replace(/\[[^\]]+\]/g, ' ');
+      
+      const keywords = [
+        'SJ', '라삐아프', '제이슨우', '아뜰리에', '브리엘', 
+        '모르간', '분트로이', '김서룡', '르네크루', '스케쳐스', 
+        'FILA', '지프', '스튜디오디페', '쏘내추럴', '코어'
+      ];
+      
+      const foundKeywords = [];
+      keywords.forEach(keyword => {
+        const regex = new RegExp(keyword, 'i');
+        if (regex.test(remainingText)) {
+          const badge = keyword; // Excluded keywords are output without brackets.
+          
+          const isDuplicate = brackets.some(b => b.toLowerCase().includes(badge.toLowerCase())) || 
+                              foundKeywords.some(fk => fk.toLowerCase() === badge.toLowerCase());
+          if (!isDuplicate) {
+            foundKeywords.push(badge);
+          }
+        }
+      });
+      
+      // Strip surrounding square brackets from bracket tokens before display
+      const cleanBrackets = brackets.map(b => b.replace(/^\[|\]$/g, ''));
+      resultStr = [...cleanBrackets, ...foundKeywords].join(' ');
+    }
+  }
 
+  // Apply truncation limit based on device
+  const maxLength = isDesktop ? 16 : 11;
+  if (resultStr.length > maxLength) {
+    return resultStr.substring(0, maxLength) + '...';
+  }
+  
+  return resultStr;
 }
 
 function App() {
@@ -1138,7 +1143,7 @@ function App() {
           <div className="broadcast-program">
             <span className="broadcast-program-title">
               <FlowerIcon />
-              {cleanProgramTitle(activeProgram.pgmTitle, mode)}
+              {cleanProgramTitle(activeProgram.pgmTitle, mode, isDesktop)}
             </span>
             {(activeProgram.location || activeProgram.pd || activeProgram.hosts) && (
               <span className="broadcast-meta">
@@ -1148,14 +1153,6 @@ function App() {
               </span>
             )}
           </div>
-          {/* Heart button */}
-          <button
-            className={`heart-btn ${likedPrograms.has(getLikeKey(activeProgram)) ? 'liked' : ''}`}
-            onClick={() => toggleLike(activeProgram)}
-            aria-label="좋아요"
-          >
-            {likedPrograms.has(getLikeKey(activeProgram)) ? '♥️' : '♡'}
-          </button>
         </div>
       )}
 
