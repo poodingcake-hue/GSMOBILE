@@ -1123,15 +1123,29 @@ function App() {
 
       {/* Program broadcasting Name */}
       {activeProgram && (
-        <h2 className="broadcast-header">
-          <span className="broadcast-header-text">
-            {formatHeaderDate(activeProgram.date)} {activeProgram.broadcast_time} 방송
-            <FlowerIcon />
-            {cleanProgramTitle(activeProgram.pgmTitle, mode)}
-            {activeProgram.location && ` / 스튜디오: ${activeProgram.location}`}
-            {activeProgram.pd && ` / PD: ${activeProgram.pd}`}
-            {activeProgram.hosts && ` / 호스트: ${activeProgram.hosts}`}
-          </span>
+        <div className="broadcast-header">
+          {/* Left: Date + Time block */}
+          <div className="broadcast-datetime">
+            <span className="broadcast-date">{formatHeaderDate(activeProgram.date)}</span>
+            <span className="broadcast-time-text">{activeProgram.broadcast_time}</span>
+          </div>
+          {/* Vertical divider */}
+          <div className="broadcast-divider" />
+          {/* Right: Program name block */}
+          <div className="broadcast-program">
+            <span className="broadcast-program-title">
+              <FlowerIcon />
+              {cleanProgramTitle(activeProgram.pgmTitle, mode)}
+            </span>
+            {(activeProgram.location || activeProgram.pd || activeProgram.hosts) && (
+              <span className="broadcast-meta">
+                {activeProgram.location && `스튜디오: ${activeProgram.location}`}
+                {activeProgram.pd && ` · PD: ${activeProgram.pd}`}
+                {activeProgram.hosts && ` · 호스트: ${activeProgram.hosts}`}
+              </span>
+            )}
+          </div>
+          {/* Heart button */}
           <button
             className={`heart-btn ${likedPrograms.has(getLikeKey(activeProgram)) ? 'liked' : ''}`}
             onClick={() => toggleLike(activeProgram)}
@@ -1139,7 +1153,7 @@ function App() {
           >
             {likedPrograms.has(getLikeKey(activeProgram)) ? '♥️' : '♡'}
           </button>
-        </h2>
+        </div>
       )}
 
       {/* States handler */}
