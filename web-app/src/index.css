@@ -260,7 +260,7 @@ body {
   align-items: center;
   gap: 0;
   padding: min(2.5vh, 20px) 0.75rem min(2.5vh, 20px) 0.75rem;
-  background: linear-gradient(to right, #EFF6FF, #F8FAFF);
+  background: linear-gradient(to right, #DBEAFE, #ffffff);
   border-radius: 0.75rem;
   margin: 0 0.5rem 0 0.5rem;
   position: relative;
