@@ -107,18 +107,12 @@ function formatHeaderDate(dateStr) {
 }
 
 const FlowerIcon = () => (
-  <img 
-    src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGs3YWYzaWo0bmd5NncxeHJieGppNjF1ZW5pZWw2b2dub3lpNTlodSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/ZLg3UCRQDJUo6GtpqI/giphy.gif"
-    alt="Live GIF"
-    style={{ 
-      display: 'inline-block', 
-      height: '2.3em', /* Doubled the size as requested */
-      verticalAlign: '-2px', /* Adjusts baseline alignment slightly */
-      margin: '0 0.45rem', 
-      flexShrink: 0,
-      objectFit: 'contain'
-    }}
-  />
+  <span style={{ 
+    margin: '0 0.45rem 0 0', 
+    fontSize: '1.2em', 
+    verticalAlign: 'middle',
+    lineHeight: 1
+  }}>⭐</span>
 );
 
 // Clean program title based on brand brackets and keyword rules
