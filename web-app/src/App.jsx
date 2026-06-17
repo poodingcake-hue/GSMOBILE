@@ -179,7 +179,7 @@ function cleanProgramTitle(title, mode, isDesktop = true) {
   }
 
   // Apply truncation limit based on device
-  const maxLength = isDesktop ? 16 : 11;
+  const maxLength = isDesktop ? 16 : 14;
   if (resultStr.length > maxLength) {
     return resultStr.substring(0, maxLength) + '...';
   }
@@ -202,6 +202,7 @@ function App() {
   // Navigation & filter states
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPgmId, setSelectedPgmId] = useState('');
+  const [fetchedNames, setFetchedNames] = useState({});
   const [allTimes, setAllTimes] = useState(false);
   const [mode, setMode] = useState('crawl'); // 'crawl' (공식 크롤링) or 'internal' (사내 사전 편성)
   const [showAddModal, setShowAddModal] = useState(false);
@@ -747,12 +748,14 @@ function App() {
       
       // 1. Mapped product name (from raw.csv, fall back to default title)
       let name = p.title || p.pgmTitle || '';
+      let isFallbackName = (!p.title || p.title === '-' || p.title === p.pgmTitle);
       let location = '';
       if (rawData.length > 1) {
         const foundInv = rawData.slice(1).find(row => row[rawColumnIndices.prdid] === prdid);
-        if (foundInv) {
+        if (foundInv && foundInv[rawColumnIndices.name] && foundInv[rawColumnIndices.name] !== '-') {
           name = foundInv[rawColumnIndices.name];
           location = foundInv[rawColumnIndices.location];
+          isFallbackName = false;
         }
       }
       
@@ -806,7 +809,8 @@ function App() {
       
       return {
         ...p,
-        mappedName: name,
+        mappedName: fetchedNames[prdid] && fetchedNames[prdid] !== 'fetching...' ? fetchedNames[prdid] : name,
+        needsNameFetch: isFallbackName && !fetchedNames[prdid],
         location,
         imageUrl,
         image2Url,
@@ -881,7 +885,10 @@ function App() {
     }
 
     return mappedManualProducts;
-  }, [activeProgram, rawData, imageData, liveData, rawColumnIndices, imageColumnIndices, liveColumnIndices, ourProductIds, mode, mliveData, selectedDate]);
+  }, [activeProgram, rawData, imageData, liveData, rawColumnIndices, imageColumnIndices, liveColumnIndices, ourProductIds, mode, mliveData, selectedDate, fetchedNames]);
+
+  // Fetch missing product names dynamically via Google Apps Script API
+  // (Removed because GS Shop SPA blocks external fetch and returns '안내' or '{{ hlTitle }}')
 
   const excludedItems = useMemo(() => activeProducts.filter(p => p.comparisonStatus === 'excluded'), [activeProducts]);
   const addedItems = useMemo(() => activeProducts.filter(p => p.comparisonStatus === 'added'), [activeProducts]);
