@@ -1359,7 +1359,8 @@ input[type="date"].date-empty::-webkit-datetime-edit-fields-wrapper {
 /* Print Styles */
 @media print {
   .sticky-header,
-  .modal-overlay {
+  .modal-overlay,
+  .print-btn {
     display: none !important;
   }
   

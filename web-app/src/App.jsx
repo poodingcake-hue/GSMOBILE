@@ -983,27 +983,30 @@ function App() {
 
   return (
     <div className="container">
+      {/* Absolute floating print button on desktop */}
+      {isDesktop && (
+        <button 
+          className="print-btn" 
+          onClick={() => window.print()}
+          title="화면 인쇄"
+          style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 9999, padding: '0.6rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '50%', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+        >
+          <Printer size={20} color="#475569" />
+        </button>
+      )}
+
       {/* Sticky Header: Right Control Panel on Desktop */}
       <div className="sticky-header">
         {isDesktop ? (
           <>
             {/* 1. Mode Toggle (Full Width) */}
-            <div className="controls-row-top" style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="controls-row-top">
               <button 
                 className="mode-toggle-btn full-width-btn" 
                 onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
                 title={mode === 'crawl' ? '세일즈온 등록정보로 전환' : 'GS SHOP 보기로 전환'}
-                style={{ flex: 1 }}
               >
                 <span>{mode === 'crawl' ? 'GS SHOP' : '세일즈온 등록정보'}</span>
-              </button>
-              <button 
-                className="print-btn" 
-                onClick={() => window.print()}
-                title="화면 인쇄"
-                style={{ padding: '0.5rem 1rem', background: '#f1f5f9', border: 'none', borderRadius: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-              >
-                <Printer size={18} color="#475569" />
               </button>
             </div>
 

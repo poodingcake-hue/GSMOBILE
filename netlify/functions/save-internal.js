@@ -116,7 +116,7 @@ export default async (req) => {
       method: 'PUT',
       headers,
       body: JSON.stringify({
-        message: `data: update internal schedule from browser [skip ci]`,
+        message: `data: update internal schedule from browser`,
         content: base64Content,
         sha: sha || undefined,
       }),

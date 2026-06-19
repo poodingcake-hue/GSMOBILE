@@ -120,7 +120,7 @@ export async function onRequest(context) {
       method: 'PUT',
       headers,
       body: JSON.stringify({
-        message: `data: update internal schedule from browser [skip ci]`,
+        message: `data: update internal schedule from browser`,
         content: base64Content,
         sha: sha || undefined,
       }),

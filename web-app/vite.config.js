@@ -70,7 +70,7 @@ const handleApiRequest = (req, res, next) => {
         fs.appendFileSync(csvPath, csvContent, 'utf8');
         
         // Git add, commit and push
-        const gitCmd = `git add web-app/public/data/internal.csv && git commit -m "data: update internal schedule [skip ci]" && git push`;
+        const gitCmd = `git add web-app/public/data/internal.csv && git commit -m "data: update internal schedule" && git push`;
         const projectRoot = path.resolve(__dirname, '..');
         
         exec(gitCmd, { cwd: projectRoot }, (error, stdout, stderr) => {
