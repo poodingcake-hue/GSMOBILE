@@ -109,7 +109,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg', 'data/mlive.csv', 'data/internal.csv'],
+      includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
         name: 'GS Shop Mobile Live Dashboard',
         short_name: 'GSMOBILE',

@@ -8,7 +8,8 @@ import {
   ChevronRight,
   Video,
   Headphones,
-  Mic
+  Mic,
+  Printer
 } from 'lucide-react';
 
 // CSV Parsing Helper returning row arrays
@@ -973,13 +974,22 @@ function App() {
         {isDesktop ? (
           <>
             {/* 1. Mode Toggle (Full Width) */}
-            <div className="controls-row-top">
+            <div className="controls-row-top" style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                 className="mode-toggle-btn full-width-btn" 
                 onClick={() => setMode(prev => prev === 'crawl' ? 'internal' : 'crawl')} 
                 title={mode === 'crawl' ? '세일즈온 등록정보로 전환' : 'GS SHOP 보기로 전환'}
+                style={{ flex: 1 }}
               >
                 <span>{mode === 'crawl' ? 'GS SHOP' : '세일즈온 등록정보'}</span>
+              </button>
+              <button 
+                className="print-btn" 
+                onClick={() => window.print()}
+                title="화면 인쇄"
+                style={{ padding: '0.5rem 1rem', background: '#f1f5f9', border: 'none', borderRadius: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              >
+                <Printer size={18} color="#475569" />
               </button>
             </div>
 
@@ -1209,7 +1219,7 @@ function App() {
       ) : (
         /* 4. Products Grid */
         <main 
-          className="product-grid"
+          className={`product-grid ${activeProducts.filter(p => mode === 'internal' || p.isOurProduct || allTimes).length > 12 ? 'print-4-cols' : 'print-fit-page'}`}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >

@@ -1355,3 +1355,111 @@ input[type="date"].date-empty::-webkit-datetime-edit {
 input[type="date"].date-empty::-webkit-datetime-edit-fields-wrapper {
   color: transparent;
 }
+
+/* Print Styles */
+@media print {
+  .sticky-header,
+  .modal-overlay {
+    display: none !important;
+  }
+  
+  .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  body, #root {
+    background: white !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+  }
+
+  .broadcast-header {
+    page-break-after: avoid;
+    break-after: avoid;
+    background: transparent !important;
+    border-bottom: 2px solid #e2e8f0;
+    height: auto !important;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .broadcast-datetime, .broadcast-program-title, .meta-badge {
+    color: black !important;
+  }
+
+  /* Increase header text sizes for printing */
+  .broadcast-datetime {
+    width: auto !important;
+    min-width: 6.5rem !important;
+  }
+  .broadcast-date {
+    font-size: 1.2rem !important;
+  }
+  .broadcast-time-text {
+    font-size: 1.1rem !important;
+  }
+  .broadcast-program-title {
+    font-size: 1.8rem !important;
+  }
+  .meta-badge {
+    font-size: 0.9rem !important;
+    padding: 0.3rem 0.6rem !important;
+  }
+
+  .product-grid {
+    display: grid !important;
+    gap: 8px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .product-grid.print-4-cols {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .product-grid.print-4-cols .product-img-container {
+    aspect-ratio: auto !important;
+    height: 150px;
+  }
+
+  .product-grid.print-fit-page {
+    height: calc(100vh - 130px) !important;
+    grid-auto-rows: minmax(0, 1fr) !important;
+    overflow: hidden;
+  }
+
+  .product-grid.print-fit-page .product-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .product-grid.print-fit-page .product-img-container {
+    flex: 1 1 auto;
+    aspect-ratio: auto !important;
+    min-height: 0;
+  }
+
+  .product-grid.print-fit-page .product-info-body {
+    flex: 0 0 auto;
+  }
+
+  .product-grid.print-fit-page .product-img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+  }
+
+  .product-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
