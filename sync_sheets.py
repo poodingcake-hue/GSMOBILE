@@ -53,7 +53,8 @@ def main():
             "LIVE": "live.csv",
             "이미지": "image.csv",
             "RAW": "raw.csv",
-            "MLIVE": "mlive.csv"
+            "MLIVE": "mlive.csv",
+            "VOD": "vod.csv"
         }
         
         # Target local directory path (web-app/public/data/)

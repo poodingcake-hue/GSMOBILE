@@ -490,9 +490,23 @@ function App() {
       }),
       fetch(`data/internal.csv?t=${cacheBuster}`)
         .then(r => r.ok ? r.text() : '')
+        .catch(() => ''),
+      fetch(`data/vod.csv?t=${cacheBuster}`)
+        .then(r => r.ok ? r.text() : '')
         .catch(() => '')
     ])
-      .then(([mliveText, liveText, imageText, rawText, internalText]) => {
+      .then(([mliveText, liveText, imageText, rawText, internalText, vodText]) => {
+        // 0. Parse VOD exclusions
+        const vodSet = new Set();
+        if (vodText) {
+          const vodRows = parseCSVToRows(vodText);
+          vodRows.forEach(row => {
+            if (row.length > 0 && row[0]) {
+              vodSet.add(row[0].trim());
+            }
+          });
+        }
+
         // 1. Parse MLIVE
         const mliveRows = parseCSVToRows(mliveText);
         const mliveHeaders = mliveRows[0];
@@ -502,7 +516,7 @@ function App() {
             obj[h] = r[idx] || '';
           });
           return obj;
-        });
+        }).filter(item => !vodSet.has(item.pgmId));
         setMliveData(mliveList);
 
         // 2. Parse LIVE
