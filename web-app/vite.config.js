@@ -141,6 +141,7 @@ export default defineConfig({
       }
     }
   ],
-  base: '/',
+  // Netlify는 루트(/), GitHub Pages는 /GSMOBILE/ 하위 경로에서 서비스됨
+  base: process.env.NETLIFY ? '/' : '/GSMOBILE/',
 })
 
